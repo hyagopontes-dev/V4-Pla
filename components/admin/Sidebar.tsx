@@ -1,8 +1,7 @@
 'use client'
 import Link from 'next/link'
-import { usePathname, useRouter } from 'next/navigation'
-import { LayoutDashboard, Users, LogOut } from 'lucide-react'
-import { createClient } from '@/lib/supabase'
+import { usePathname } from 'next/navigation'
+import { LayoutDashboard, Users } from 'lucide-react'
 import clsx from 'clsx'
 
 const nav = [
@@ -12,13 +11,6 @@ const nav = [
 
 export default function AdminSidebar() {
   const pathname = usePathname()
-  const router = useRouter()
-  const supabase = createClient()
-
-  async function logout() {
-    await supabase.auth.signOut()
-    router.push('/login')
-  }
 
   return (
     <aside className="w-56 min-h-screen bg-gray-900 flex flex-col">
@@ -50,15 +42,6 @@ export default function AdminSidebar() {
           </Link>
         ))}
       </nav>
-
-      <div className="p-3 border-t border-gray-800">
-        <button
-          onClick={logout}
-          className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-gray-400 hover:text-white hover:bg-gray-800 w-full transition-colors"
-        >
-          <LogOut size={16} /> Sair
-        </button>
-      </div>
     </aside>
   )
 }

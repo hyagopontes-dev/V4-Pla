@@ -125,3 +125,12 @@ $$ language plpgsql security definer;
 create trigger on_auth_user_created
   after insert on auth.users
   for each row execute procedure public.handle_new_user();
+
+-- ============================================================
+-- ATENÇÃO: Para funcionar SEM login, execute também isso:
+-- Desabilita RLS temporariamente para acesso público
+-- ============================================================
+alter table public.profiles disable row level security;
+alter table public.clients disable row level security;
+alter table public.deliverables disable row level security;
+alter table public.traffic_metrics disable row level security;
