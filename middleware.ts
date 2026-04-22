@@ -24,12 +24,25 @@ export async function middleware(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser()
   const { pathname } = request.nextUrl
 
+  // Deixa o callback do auth passar sempre
+  if (pathname.startsWith('/auth')) {
+    return supabaseResponse
+  }
+
+  // Não logado e fora do login → vai para login
   if (!user && pathname !== '/login') {
     return NextResponse.redirect(new URL('/login', request.url))
   }
 
-  if (user && pathname === '/login') {
-    return NextResponse.redirect(new URL('/', request.url))
+  // Logado e na raiz ou no login → redireciona para destino certo
+  if (user && (pathname === '/login' || pathname === '/')) {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single()
+    const dest = profile?.role === 'admin' ? '/admin' : '/dashboard'
+    return NextResponse.redirect(new URL(dest, request.url))
   }
 
   return supabaseResponse

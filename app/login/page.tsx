@@ -13,14 +13,17 @@ export default function LoginPage() {
     e.preventDefault()
     setLoading(true)
     setError('')
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
-    if (error) {
+
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password })
+
+    if (error || !data.session) {
       setError('Email ou senha incorretos.')
       setLoading(false)
       return
     }
-    // Hard reload para o middleware detectar a sessão e redirecionar sem piscar
-    window.location.href = '/'
+
+    // Sessão gravada — recarrega a página para o middleware redirecionar
+    window.location.replace('/')
   }
 
   return (
@@ -67,7 +70,7 @@ export default function LoginPage() {
               disabled={loading}
               className="btn-primary w-full justify-center flex disabled:opacity-60"
             >
-              {loading ? 'Entrando...' : 'Entrar'}
+              {loading ? 'Verificando...' : 'Entrar'}
             </button>
           </form>
         </div>
