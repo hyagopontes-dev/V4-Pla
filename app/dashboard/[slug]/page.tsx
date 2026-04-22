@@ -1,4 +1,5 @@
 export const dynamic = 'force-dynamic'
+export const revalidate = 0
 
 import { createClient } from '@/lib/supabase'
 import DeliverableView from '@/components/client/DeliverableView'
