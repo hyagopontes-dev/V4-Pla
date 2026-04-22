@@ -1,44 +1,38 @@
 'use client'
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase'
-import { useRouter } from 'next/navigation'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const router = useRouter()
   const supabase = createClient()
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault()
     setLoading(true)
     setError('')
-
     const { error } = await supabase.auth.signInWithPassword({ email, password })
     if (error) {
       setError('Email ou senha incorretos.')
       setLoading(false)
       return
     }
-    router.push('/')
-    router.refresh()
+    // Hard reload para o middleware detectar a sessão e redirecionar sem piscar
+    window.location.href = '/'
   }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 flex items-center justify-center p-4">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center gap-2 mb-4">
-            <div className="w-10 h-10 bg-brand-500 rounded-xl flex items-center justify-center">
-              <span className="text-white font-bold text-lg">v4</span>
-            </div>
+          <div className="inline-flex items-center justify-center w-12 h-12 bg-brand-500 rounded-xl mb-4">
+            <span className="text-white font-bold text-xl">v4</span>
           </div>
           <h1 className="text-white text-2xl font-semibold">Bem-vindo</h1>
           <p className="text-gray-400 text-sm mt-1">Acesse sua conta para continuar</p>
         </div>
-
         <div className="bg-white rounded-2xl p-6 shadow-2xl">
           <form onSubmit={handleLogin} className="space-y-4">
             <div>
@@ -50,6 +44,7 @@ export default function LoginPage() {
                 value={email}
                 onChange={e => setEmail(e.target.value)}
                 required
+                autoComplete="email"
               />
             </div>
             <div>
@@ -61,6 +56,7 @@ export default function LoginPage() {
                 value={password}
                 onChange={e => setPassword(e.target.value)}
                 required
+                autoComplete="current-password"
               />
             </div>
             {error && (
