@@ -47,3 +47,12 @@ export interface OrganicAnalysis {
 
 export const MONTH_NAMES = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez']
 export const MONTH_FULL = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro']
+
+export interface MonthlyObjective {
+  id: string
+  client_id: string
+  month: number
+  year: number
+  content: string
+  updated_at: string
+}

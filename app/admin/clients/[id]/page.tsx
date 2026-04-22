@@ -27,6 +27,7 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
     { data: blockers },
     { data: highlights },
     { data: organicAnalyses },
+    { data: monthlyObjectives },
   ] = await Promise.all([
     supabase.from('deliverables').select('*').eq('client_id', id).order('year').order('month'),
     supabase.from('traffic_metrics').select('*').eq('client_id', id).order('year').order('month'),
@@ -35,6 +36,7 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
     supabase.from('blockers').select('*').eq('client_id', id).order('created_at', { ascending: false }),
     supabase.from('highlights').select('*').eq('client_id', id).order('year', { ascending: false }).order('month', { ascending: false }),
     supabase.from('organic_analysis').select('*').eq('client_id', id).order('created_at', { ascending: false }),
+    supabase.from('monthly_objectives').select('*').eq('client_id', id).order('year', { ascending: false }).order('month', { ascending: false }),
   ])
 
   return (
@@ -42,7 +44,6 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
       <Link href="/admin" className="flex items-center gap-1 text-gray-500 hover:text-gray-700 text-sm mb-6">
         <ArrowLeft size={14} /> Voltar para clientes
       </Link>
-
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-semibold text-gray-900">{client.name}</h1>
@@ -54,10 +55,9 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
           {client.active ? 'Ativo' : 'Inativo'}
         </span>
       </div>
-
       <div className="space-y-6">
         <ClientEditForm client={client} />
-        <ScopeManager client={client} />
+        <ScopeManager client={client} monthlyObjectives={monthlyObjectives ?? []} />
         <DeliverableManager clientId={id} contractPieces={client.contract_pieces} deliverables={deliverables ?? []} />
         <MetricsManager clientId={id} metrics={metrics ?? []} />
         <CommLogManager clientId={id} logs={commLogs ?? []} />

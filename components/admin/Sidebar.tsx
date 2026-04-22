@@ -1,7 +1,8 @@
 'use client'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
-import { LayoutDashboard, Users } from 'lucide-react'
+import { usePathname, useRouter } from 'next/navigation'
+import { LayoutDashboard, Users, LogOut } from 'lucide-react'
+import { createClient } from '@/lib/supabase'
 import clsx from 'clsx'
 
 const nav = [
@@ -11,6 +12,13 @@ const nav = [
 
 export default function AdminSidebar() {
   const pathname = usePathname()
+  const router = useRouter()
+  const supabase = createClient()
+
+  async function logout() {
+    await supabase.auth.signOut()
+    router.push('/login')
+  }
 
   return (
     <aside className="w-56 min-h-screen bg-gray-900 flex flex-col">
@@ -25,23 +33,24 @@ export default function AdminSidebar() {
           </div>
         </div>
       </div>
-
       <nav className="flex-1 p-3 space-y-1">
         {nav.map(({ href, label, icon: Icon }) => (
-          <Link
-            key={href}
-            href={href}
-            className={clsx(
-              'flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors',
+          <Link key={href} href={href}
+            className={clsx('flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors',
               pathname === href || (href !== '/admin' && pathname.startsWith(href))
                 ? 'bg-brand-500 text-white'
                 : 'text-gray-400 hover:text-white hover:bg-gray-800'
-            )}
-          >
+            )}>
             <Icon size={16} /> {label}
           </Link>
         ))}
       </nav>
+      <div className="p-3 border-t border-gray-800">
+        <button onClick={logout}
+          className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-gray-400 hover:text-white hover:bg-gray-800 w-full transition-colors">
+          <LogOut size={16} /> Sair
+        </button>
+      </div>
     </aside>
   )
 }
