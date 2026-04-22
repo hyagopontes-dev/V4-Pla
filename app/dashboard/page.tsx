@@ -11,9 +11,6 @@ import OrganicView from '@/components/client/OrganicView'
 export default async function DashboardPage() {
   const supabase = await createServerSupabase()
 
-  const clientId = profile.client_id
-  const { data: client } = await supabase.from('clients').select('*').eq('id', clientId).single()
-
   const [
     { data: deliverables },
     { data: metrics },
