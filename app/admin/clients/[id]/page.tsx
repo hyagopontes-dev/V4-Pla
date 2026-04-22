@@ -6,6 +6,11 @@ import DeliverableManager from '@/components/admin/DeliverableManager'
 import MetricsManager from '@/components/admin/MetricsManager'
 import UserManager from '@/components/admin/UserManager'
 import ClientEditForm from '@/components/admin/ClientEditForm'
+import ScopeManager from '@/components/admin/ScopeManager'
+import CommLogManager from '@/components/admin/CommLogManager'
+import BlockerManager from '@/components/admin/BlockerManager'
+import HighlightManager from '@/components/admin/HighlightManager'
+import OrganicAnalysisManager from '@/components/admin/OrganicAnalysisManager'
 
 export default async function ClientDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -14,14 +19,23 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
   const { data: client } = await supabase.from('clients').select('*').eq('id', id).single()
   if (!client) notFound()
 
-  const { data: deliverables } = await supabase
-    .from('deliverables').select('*').eq('client_id', id).order('year').order('month')
-
-  const { data: metrics } = await supabase
-    .from('traffic_metrics').select('*').eq('client_id', id).order('year').order('month')
-
-  const { data: users } = await supabase
-    .from('profiles').select('*').eq('client_id', id)
+  const [
+    { data: deliverables },
+    { data: metrics },
+    { data: users },
+    { data: commLogs },
+    { data: blockers },
+    { data: highlights },
+    { data: organicAnalyses },
+  ] = await Promise.all([
+    supabase.from('deliverables').select('*').eq('client_id', id).order('year').order('month'),
+    supabase.from('traffic_metrics').select('*').eq('client_id', id).order('year').order('month'),
+    supabase.from('profiles').select('*').eq('client_id', id),
+    supabase.from('comm_logs').select('*').eq('client_id', id).order('year', { ascending: false }).order('month', { ascending: false }),
+    supabase.from('blockers').select('*').eq('client_id', id).order('created_at', { ascending: false }),
+    supabase.from('highlights').select('*').eq('client_id', id).order('year', { ascending: false }).order('month', { ascending: false }),
+    supabase.from('organic_analysis').select('*').eq('client_id', id).order('created_at', { ascending: false }),
+  ])
 
   return (
     <div>
@@ -43,8 +57,13 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
 
       <div className="space-y-6">
         <ClientEditForm client={client} />
+        <ScopeManager client={client} />
         <DeliverableManager clientId={id} contractPieces={client.contract_pieces} deliverables={deliverables ?? []} />
         <MetricsManager clientId={id} metrics={metrics ?? []} />
+        <CommLogManager clientId={id} logs={commLogs ?? []} />
+        <BlockerManager clientId={id} blockers={blockers ?? []} />
+        <HighlightManager clientId={id} highlights={highlights ?? []} />
+        <OrganicAnalysisManager clientId={id} analyses={organicAnalyses ?? []} />
         <UserManager clientId={id} users={users ?? []} />
       </div>
     </div>

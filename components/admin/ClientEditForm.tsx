@@ -18,30 +18,19 @@ export default function ClientEditForm({ client }: Props) {
   const router = useRouter()
   const supabase = createClient()
 
- async function handleSave() {
-  setSaving(true)
-
-  const { error } = await supabase
-    .from('clients')
-    .update({
+  async function handleSave() {
+    setSaving(true)
+    await supabase.from('clients').update({
       name: form.name,
       slug: form.slug,
       contract_pieces: parseInt(form.contract_pieces),
       active: form.active,
-    })
-    .eq('id', client.id)
-
-  if (error) {
-    console.error(error)
+    }).eq('id', client.id)
     setSaving(false)
-    return
+    setSaved(true)
+    setTimeout(() => setSaved(false), 2000)
+    router.refresh()
   }
-
-  setSaved(true)
-
-  // 🔥 FORÇA RELOAD REAL (resolve 100%)
-  window.location.reload()
-}
 
   return (
     <div className="card p-0 overflow-hidden">
