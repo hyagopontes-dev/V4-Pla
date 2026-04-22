@@ -7,32 +7,33 @@ export default function LoginPage() {
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const [debug, setDebug] = useState('')
   const supabase = createClient()
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault()
     setLoading(true)
     setError('')
-    setDebug('')
 
     const { data, error } = await supabase.auth.signInWithPassword({ email, password })
 
-    setDebug(JSON.stringify({ 
-      hasSession: !!data.session, 
-      hasUser: !!data.user,
-      errorMsg: error?.message ?? null,
-      errorCode: error?.status ?? null,
-    }, null, 2))
-
     if (error || !data.session) {
-      setError(error?.message ?? 'Sem sessão retornada.')
+      setError(error?.message ?? 'Erro ao fazer login.')
       setLoading(false)
       return
     }
 
-    setDebug(prev => prev + '\n\n✅ Login OK — redirecionando...')
-    window.location.replace('/')
+    // Busca o role do usuário para redirecionar corretamente
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', data.user.id)
+      .single()
+
+    if (profile?.role === 'admin') {
+      window.location.replace('/admin')
+    } else {
+      window.location.replace('/dashboard')
+    }
   }
 
   return (
@@ -50,22 +51,21 @@ export default function LoginPage() {
             <div>
               <label className="label">Email</label>
               <input className="input" type="email" placeholder="seu@email.com"
-                value={email} onChange={e => setEmail(e.target.value)} required />
+                value={email} onChange={e => setEmail(e.target.value)}
+                required autoComplete="email" />
             </div>
             <div>
               <label className="label">Senha</label>
               <input className="input" type="password" placeholder="••••••••"
-                value={password} onChange={e => setPassword(e.target.value)} required />
+                value={password} onChange={e => setPassword(e.target.value)}
+                required autoComplete="current-password" />
             </div>
-            {error && <p className="text-red-500 text-xs bg-red-50 px-3 py-2 rounded-lg">{error}</p>}
-            {debug && (
-              <pre className="text-xs bg-gray-100 p-3 rounded-lg overflow-auto text-gray-700 max-h-48">
-                {debug}
-              </pre>
+            {error && (
+              <p className="text-red-500 text-xs bg-red-50 px-3 py-2 rounded-lg">{error}</p>
             )}
             <button type="submit" disabled={loading}
               className="btn-primary w-full justify-center flex disabled:opacity-60">
-              {loading ? 'Verificando...' : 'Entrar'}
+              {loading ? 'Entrando...' : 'Entrar'}
             </button>
           </form>
         </div>
