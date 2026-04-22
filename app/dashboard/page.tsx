@@ -11,13 +11,6 @@ import OrganicView from '@/components/client/OrganicView'
 export default async function DashboardPage() {
   const supabase = await createServerSupabase()
 
-  const { data: profile } = await supabase.from('profiles').select('client_id').eq('id', user.id).single()
-  if (!profile?.client_id) return (
-    <div className="text-center py-20">
-      <p className="text-gray-400 text-sm">Sua conta ainda não foi vinculada a um cliente.</p>
-    </div>
-  )
-
   const clientId = profile.client_id
   const { data: client } = await supabase.from('clients').select('*').eq('id', clientId).single()
 
