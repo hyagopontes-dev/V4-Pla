@@ -1,6 +1,7 @@
 'use client'
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase'
+import { useRouter } from 'next/navigation'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -8,6 +9,7 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const supabase = createClient()
+  const router = useRouter()
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault()
@@ -22,18 +24,15 @@ export default function LoginPage() {
       return
     }
 
-    // Busca o role do usuário para redirecionar corretamente
     const { data: profile } = await supabase
       .from('profiles')
       .select('role')
       .eq('id', data.user.id)
       .single()
 
-    if (profile?.role === 'admin') {
-      window.location.replace('/admin')
-    } else {
-      window.location.replace('/dashboard')
-    }
+    const dest = profile?.role === 'admin' ? '/admin' : '/dashboard'
+    router.push(dest)
+    router.refresh()
   }
 
   return (

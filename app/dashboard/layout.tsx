@@ -2,6 +2,9 @@ import { redirect } from 'next/navigation'
 import { createServerSupabase } from '@/lib/supabase-server'
 import ClientNav from '@/components/client/ClientNav'
 
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createServerSupabase()
   const { data: { user } } = await supabase.auth.getUser()
