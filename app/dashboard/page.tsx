@@ -10,7 +10,6 @@ import OrganicView from '@/components/client/OrganicView'
 
 export default async function DashboardPage() {
   const supabase = await createServerSupabase()
-  const { data: { user } } = await supabase.auth.getUser()
 
   const { data: profile } = await supabase.from('profiles').select('client_id').eq('id', user.id).single()
   if (!profile?.client_id) return (
