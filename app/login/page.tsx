@@ -1,3 +1,5 @@
+import { loginAction } from './action'
+
 export default function LoginPage({ searchParams }: { searchParams: { error?: string } }) {
   const hasError = searchParams?.error === 'invalid'
 
@@ -12,8 +14,7 @@ export default function LoginPage({ searchParams }: { searchParams: { error?: st
           <p className="text-gray-400 text-sm mt-1">Acesse sua conta para continuar</p>
         </div>
         <div className="bg-white rounded-2xl p-6 shadow-2xl">
-          <form action="/api/login" method="POST" className="space-y-4">
-            <div>
+          <form action={loginAction} className="space-y-4">            <div>
               <label className="label">Email</label>
               <input className="input" type="email" name="email"
                 placeholder="seu@email.com" required autoComplete="email" />
