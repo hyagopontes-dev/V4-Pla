@@ -9,13 +9,25 @@ interface Props { clientId: string; analyses: OrganicAnalysis[] }
 const CURRENT_YEAR = new Date().getFullYear()
 const YEARS = [CURRENT_YEAR - 1, CURRENT_YEAR, CURRENT_YEAR + 1]
 
+function getInstagramEmbedUrl(url: string): string | null {
+  if (!url) return null
+  const match = url.match(/instagram\.com\/(p|reel|reels)\/([A-Za-z0-9_-]+)/)
+  if (!match) return null
+  return `https://www.instagram.com/${match[1]}/${match[2]}/embed/`
+}
+
 export default function OrganicAnalysisManager({ clientId, analyses: initial }: Props) {
   const [items, setItems] = useState<OrganicAnalysis[]>(initial)
   const [showForm, setShowForm] = useState(false)
   const [saving, setSaving] = useState<string | null>(null)
   const [filterMonth, setFilterMonth] = useState(String(new Date().getMonth() + 1))
   const [filterYear, setFilterYear] = useState(String(CURRENT_YEAR))
-  const [form, setForm] = useState({ month: String(new Date().getMonth() + 1), year: String(CURRENT_YEAR), video_url: '', analysis: '' })
+  const [form, setForm] = useState({
+    month: String(new Date().getMonth() + 1),
+    year: String(CURRENT_YEAR),
+    video_url: '',
+    analysis: '',
+  })
   const supabase = createClient()
 
   async function add() {
@@ -35,7 +47,10 @@ export default function OrganicAnalysisManager({ clientId, analyses: initial }: 
 
   async function saveItem(item: OrganicAnalysis) {
     setSaving(item.id)
-    await supabase.from('organic_analysis').update({ video_url: item.video_url, analysis: item.analysis }).eq('id', item.id)
+    await supabase.from('organic_analysis').update({
+      video_url: item.video_url,
+      analysis: item.analysis,
+    }).eq('id', item.id)
     setSaving(null)
   }
 
@@ -49,8 +64,9 @@ export default function OrganicAnalysisManager({ clientId, analyses: initial }: 
     setItems(prev => prev.map(i => i.id === id ? { ...i, [field]: value } : i))
   }
 
-  const filtered = items.filter(i => i.month === parseInt(filterMonth) && i.year === parseInt(filterYear))
-  const sorted = [...filtered].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+  const filtered = items
+    .filter(i => i.month === parseInt(filterMonth) && i.year === parseInt(filterYear))
+    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
 
   return (
     <div className="card p-0 overflow-hidden">
@@ -93,12 +109,34 @@ export default function OrganicAnalysisManager({ clientId, analyses: initial }: 
             </div>
           </div>
           <div>
-            <label className="label">Link do vídeo (Instagram, Drive, etc.)</label>
-            <input className="input" type="url" placeholder="https://www.instagram.com/reel/..." value={form.video_url} onChange={e => setForm(f => ({ ...f, video_url: e.target.value }))} />
+            <label className="label">Link do vídeo (Instagram Reel ou Post)</label>
+            <input
+              className="input"
+              type="url"
+              placeholder="https://www.instagram.com/reel/ABC123..."
+              value={form.video_url}
+              onChange={e => setForm(f => ({ ...f, video_url: e.target.value }))}
+            />
+            {form.video_url && getInstagramEmbedUrl(form.video_url) && (
+              <div className="mt-3 flex justify-center">
+                <iframe
+                  src={getInstagramEmbedUrl(form.video_url)!}
+                  width="280" height="380"
+                  frameBorder="0" scrolling="no"
+                  className="rounded-xl border border-pink-200"
+                  title="Preview"
+                />
+              </div>
+            )}
           </div>
           <div>
             <label className="label">Análise crítica</label>
-            <textarea className="input min-h-[80px] resize-none" placeholder="Desempenho, pontos fortes, oportunidades de melhoria..." value={form.analysis} onChange={e => setForm(f => ({ ...f, analysis: e.target.value }))} />
+            <textarea
+              className="input min-h-[80px] resize-none"
+              placeholder="Desempenho, pontos fortes, oportunidades de melhoria..."
+              value={form.analysis}
+              onChange={e => setForm(f => ({ ...f, analysis: e.target.value }))}
+            />
           </div>
           <div className="flex gap-2">
             <button onClick={add} className="btn-primary text-xs py-1.5">Adicionar</button>
@@ -107,46 +145,68 @@ export default function OrganicAnalysisManager({ clientId, analyses: initial }: 
         </div>
       )}
 
-      {sorted.length === 0 ? (
-        <p className="text-sm text-gray-400 text-center py-8">Nenhum vídeo analisado para {MONTH_FULL[parseInt(filterMonth) - 1]} {filterYear}.</p>
+      {filtered.length === 0 ? (
+        <p className="text-sm text-gray-400 text-center py-8">
+          Nenhum vídeo em {MONTH_FULL[parseInt(filterMonth) - 1]} {filterYear}.
+        </p>
       ) : (
         <div className="divide-y divide-gray-50">
-          {sorted.map((item, idx) => (
-            <div key={item.id} className="p-4">
-              <div className="flex items-start justify-between gap-3 mb-2">
-                <span className="text-xs font-medium text-gray-500">Vídeo #{idx + 1}</span>
-                <div className="flex items-center gap-2">
-                  <button onClick={() => saveItem(item)} className="text-brand-500 hover:text-brand-700">
-                    {saving === item.id ? <span className="text-xs text-gray-400">...</span> : <Save size={13} />}
-                  </button>
-                  <button onClick={() => remove(item.id)} className="text-red-300 hover:text-red-500">
-                    <Trash2 size={13} />
-                  </button>
+          {filtered.map((item, idx) => {
+            const embedUrl = item.video_url ? getInstagramEmbedUrl(item.video_url) : null
+            return (
+              <div key={item.id} className="p-5">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-xs font-medium text-gray-500">Vídeo #{idx + 1}</span>
+                  <div className="flex items-center gap-2">
+                    <button onClick={() => saveItem(item)} className="text-brand-500 hover:text-brand-700">
+                      {saving === item.id ? <span className="text-xs text-gray-400">...</span> : <Save size={13} />}
+                    </button>
+                    <button onClick={() => remove(item.id)} className="text-red-300 hover:text-red-500">
+                      <Trash2 size={13} />
+                    </button>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 items-start">
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <input
+                        className="input text-xs py-1.5 flex-1"
+                        placeholder="Link do Instagram..."
+                        value={item.video_url ?? ''}
+                        onChange={e => update(item.id, 'video_url', e.target.value)}
+                      />
+                      {item.video_url && (
+                        <a href={item.video_url} target="_blank" rel="noopener" className="text-pink-500 hover:text-pink-700">
+                          <ExternalLink size={14} />
+                        </a>
+                      )}
+                    </div>
+                    {embedUrl && (
+                      <div className="flex justify-center pt-1">
+                        <iframe
+                          src={embedUrl}
+                          width="280" height="380"
+                          frameBorder="0" scrolling="no"
+                          className="rounded-xl border border-gray-200"
+                          title={`Video ${idx + 1}`}
+                        />
+                      </div>
+                    )}
+                  </div>
+                  <div>
+                    <label className="label">Análise crítica</label>
+                    <textarea
+                      className="input text-xs py-1.5 min-h-[180px] resize-y w-full"
+                      placeholder="Análise crítica do vídeo..."
+                      value={item.analysis ?? ''}
+                      onChange={e => update(item.id, 'analysis', e.target.value)}
+                    />
+                  </div>
                 </div>
               </div>
-              <div className="space-y-2">
-                <div className="flex items-center gap-2">
-                  <input
-                    className="input text-xs py-1.5 flex-1"
-                    placeholder="Link do vídeo..."
-                    value={item.video_url ?? ''}
-                    onChange={e => update(item.id, 'video_url', e.target.value)}
-                  />
-                  {item.video_url && (
-                    <a href={item.video_url} target="_blank" rel="noopener" className="text-pink-500 hover:text-pink-700 flex-shrink-0">
-                      <ExternalLink size={14} />
-                    </a>
-                  )}
-                </div>
-                <textarea
-                  className="input text-xs py-1.5 min-h-[80px] resize-none w-full"
-                  placeholder="Análise crítica do vídeo..."
-                  value={item.analysis ?? ''}
-                  onChange={e => update(item.id, 'analysis', e.target.value)}
-                />
-              </div>
-            </div>
-          ))}
+            )
+          })}
         </div>
       )}
     </div>
