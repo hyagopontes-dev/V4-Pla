@@ -1,7 +1,7 @@
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
-import { NextResponse, type NextRequest } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 
-export async function middleware(request: NextRequest) {
+export function createClient(request: NextRequest) {
   let response = NextResponse.next({ request })
 
   const supabase = createServerClient(
@@ -23,14 +23,5 @@ export async function middleware(request: NextRequest) {
     }
   )
 
-  // Refresh session - essential for Server Components to read auth state
-  await supabase.auth.getUser()
-
-  return response
-}
-
-export const config = {
-  matcher: [
-    '/((?!_next/static|_next/image|favicon.ico|api/login|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
-  ],
+  return { supabase, response }
 }

@@ -1,5 +1,4 @@
-import { createServerClient, type CookieOptions } from '@supabase/ssr'
-import { cookies } from 'next/headers'
+import { createClient } from '@/lib/supabase-server-route'
 import { NextRequest, NextResponse } from 'next/server'
 
 export async function POST(request: NextRequest) {
@@ -7,22 +6,7 @@ export async function POST(request: NextRequest) {
   const email = formData.get('email') as string
   const password = formData.get('password') as string
 
-  const cookieStore = await cookies()
-
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() { return cookieStore.getAll() },
-        setAll(cookiesToSet: { name: string; value: string; options: CookieOptions }[]) {
-          cookiesToSet.forEach(({ name, value, options }) =>
-            cookieStore.set(name, value, options)
-          )
-        },
-      },
-    }
-  )
+  const { supabase, response } = createClient(request)
 
   const { data, error } = await supabase.auth.signInWithPassword({ email, password })
 
@@ -37,5 +21,12 @@ export async function POST(request: NextRequest) {
     .single()
 
   const dest = profile?.role === 'admin' ? '/admin' : '/dashboard'
-  return NextResponse.redirect(new URL(dest, request.url), { status: 303 })
+  
+  // Copiar cookies da resposta do supabase para o redirect
+  const redirectResponse = NextResponse.redirect(new URL(dest, request.url), { status: 303 })
+  response.cookies.getAll().forEach(cookie => {
+    redirectResponse.cookies.set(cookie.name, cookie.value)
+  })
+  
+  return redirectResponse
 }
