@@ -7,22 +7,31 @@ export default function LoginPage() {
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [debug, setDebug] = useState('')
   const supabase = createClient()
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault()
     setLoading(true)
     setError('')
+    setDebug('')
 
     const { data, error } = await supabase.auth.signInWithPassword({ email, password })
 
+    setDebug(JSON.stringify({ 
+      hasSession: !!data.session, 
+      hasUser: !!data.user,
+      errorMsg: error?.message ?? null,
+      errorCode: error?.status ?? null,
+    }, null, 2))
+
     if (error || !data.session) {
-      setError('Email ou senha incorretos.')
+      setError(error?.message ?? 'Sem sessão retornada.')
       setLoading(false)
       return
     }
 
-    // Sessão gravada — recarrega a página para o middleware redirecionar
+    setDebug(prev => prev + '\n\n✅ Login OK — redirecionando...')
     window.location.replace('/')
   }
 
@@ -40,36 +49,22 @@ export default function LoginPage() {
           <form onSubmit={handleLogin} className="space-y-4">
             <div>
               <label className="label">Email</label>
-              <input
-                className="input"
-                type="email"
-                placeholder="seu@email.com"
-                value={email}
-                onChange={e => setEmail(e.target.value)}
-                required
-                autoComplete="email"
-              />
+              <input className="input" type="email" placeholder="seu@email.com"
+                value={email} onChange={e => setEmail(e.target.value)} required />
             </div>
             <div>
               <label className="label">Senha</label>
-              <input
-                className="input"
-                type="password"
-                placeholder="••••••••"
-                value={password}
-                onChange={e => setPassword(e.target.value)}
-                required
-                autoComplete="current-password"
-              />
+              <input className="input" type="password" placeholder="••••••••"
+                value={password} onChange={e => setPassword(e.target.value)} required />
             </div>
-            {error && (
-              <p className="text-red-500 text-xs bg-red-50 px-3 py-2 rounded-lg">{error}</p>
+            {error && <p className="text-red-500 text-xs bg-red-50 px-3 py-2 rounded-lg">{error}</p>}
+            {debug && (
+              <pre className="text-xs bg-gray-100 p-3 rounded-lg overflow-auto text-gray-700 max-h-48">
+                {debug}
+              </pre>
             )}
-            <button
-              type="submit"
-              disabled={loading}
-              className="btn-primary w-full justify-center flex disabled:opacity-60"
-            >
+            <button type="submit" disabled={loading}
+              className="btn-primary w-full justify-center flex disabled:opacity-60">
               {loading ? 'Verificando...' : 'Entrar'}
             </button>
           </form>
