@@ -1,5 +1,37 @@
-export default function LoginPage({ searchParams }: { searchParams: { error?: string } }) {
-  const hasError = searchParams?.error === 'invalid'
+'use client'
+import { useState } from 'react'
+import { createClient } from '@/lib/supabase'
+
+export default function LoginPage() {
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+  const supabase = createClient()
+
+  async function handleLogin(e: React.FormEvent) {
+    e.preventDefault()
+    setLoading(true)
+    setError('')
+
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password })
+
+    if (error || !data.session) {
+      setError(error?.message ?? 'Erro ao fazer login.')
+      setLoading(false)
+      return
+    }
+
+    // Busca role e redireciona
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', data.user.id)
+      .single()
+
+    const dest = profile?.role === 'admin' ? '/admin' : '/dashboard'
+    window.location.href = dest
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 flex items-center justify-center p-4">
@@ -12,24 +44,25 @@ export default function LoginPage({ searchParams }: { searchParams: { error?: st
           <p className="text-gray-400 text-sm mt-1">Acesse sua conta para continuar</p>
         </div>
         <div className="bg-white rounded-2xl p-6 shadow-2xl">
-          <form action="/api/login" method="POST" className="space-y-4">
+          <form onSubmit={handleLogin} className="space-y-4">
             <div>
               <label className="label">Email</label>
-              <input className="input" type="email" name="email"
-                placeholder="seu@email.com" required autoComplete="email" />
+              <input className="input" type="email" placeholder="seu@email.com"
+                value={email} onChange={e => setEmail(e.target.value)}
+                required autoComplete="email" />
             </div>
             <div>
               <label className="label">Senha</label>
-              <input className="input" type="password" name="password"
-                placeholder="••••••••" required autoComplete="current-password" />
+              <input className="input" type="password" placeholder="••••••••"
+                value={password} onChange={e => setPassword(e.target.value)}
+                required autoComplete="current-password" />
             </div>
-            {hasError && (
-              <p className="text-red-500 text-xs bg-red-50 px-3 py-2 rounded-lg">
-                Email ou senha incorretos.
-              </p>
+            {error && (
+              <p className="text-red-500 text-xs bg-red-50 px-3 py-2 rounded-lg">{error}</p>
             )}
-            <button type="submit" className="btn-primary w-full justify-center flex">
-              Entrar
+            <button type="submit" disabled={loading}
+              className="btn-primary w-full justify-center flex disabled:opacity-60">
+              {loading ? 'Entrando...' : 'Entrar'}
             </button>
           </form>
         </div>

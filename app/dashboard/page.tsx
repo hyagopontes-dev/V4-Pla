@@ -1,4 +1,3 @@
-import { redirect } from 'next/navigation'
 import { createServerSupabase } from '@/lib/supabase-server'
 import DeliverableView from '@/components/client/DeliverableView'
 import TrafficView from '@/components/client/TrafficView'
@@ -8,20 +7,23 @@ import BlockerView from '@/components/client/BlockerView'
 import HighlightView from '@/components/client/HighlightView'
 import OrganicView from '@/components/client/OrganicView'
 
-export default async function DashboardPage() {
+export default async function DashboardPage({ searchParams }: { searchParams: Promise<{ client?: string }> }) {
+  const { client: clientSlug } = await searchParams
   const supabase = await createServerSupabase()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/login')
 
-  const { data: profile } = await supabase.from('profiles').select('client_id').eq('id', user.id).single()
-  if (!profile?.client_id) return (
-    <div className="text-center py-20">
-      <p className="text-gray-400 text-sm">Sua conta ainda não foi vinculada a um cliente.</p>
-    </div>
-  )
+  const { data: clients } = clientSlug
+    ? await supabase.from('clients').select('*').eq('slug', clientSlug)
+    : await supabase.from('clients').select('*').order('name').limit(1)
 
-  const clientId = profile.client_id
-  const { data: client } = await supabase.from('clients').select('*').eq('id', clientId).single()
+  const client = clients?.[0]
+
+  if (!client) {
+    return (
+      <div className="text-center py-20">
+        <p className="text-gray-400 text-sm">Nenhum cliente encontrado.</p>
+      </div>
+    )
+  }
 
   const [
     { data: deliverables },
@@ -32,23 +34,23 @@ export default async function DashboardPage() {
     { data: organicAnalyses },
     { data: monthlyObjectives },
   ] = await Promise.all([
-    supabase.from('deliverables').select('*').eq('client_id', clientId).order('year').order('month'),
-    supabase.from('traffic_metrics').select('*').eq('client_id', clientId),
-    supabase.from('comm_logs').select('*').eq('client_id', clientId).order('year', { ascending: false }).order('month', { ascending: false }),
-    supabase.from('blockers').select('*').eq('client_id', clientId).eq('resolved', false).order('created_at', { ascending: false }),
-    supabase.from('highlights').select('*').eq('client_id', clientId).order('year', { ascending: false }).order('month', { ascending: false }),
-    supabase.from('organic_analysis').select('*').eq('client_id', clientId).order('created_at', { ascending: false }),
-    supabase.from('monthly_objectives').select('*').eq('client_id', clientId).order('year', { ascending: false }).order('month', { ascending: false }),
+    supabase.from('deliverables').select('*').eq('client_id', client.id).order('year').order('month'),
+    supabase.from('traffic_metrics').select('*').eq('client_id', client.id),
+    supabase.from('comm_logs').select('*').eq('client_id', client.id).order('year', { ascending: false }).order('month', { ascending: false }),
+    supabase.from('blockers').select('*').eq('client_id', client.id).eq('resolved', false).order('created_at', { ascending: false }),
+    supabase.from('highlights').select('*').eq('client_id', client.id).order('year', { ascending: false }).order('month', { ascending: false }),
+    supabase.from('organic_analysis').select('*').eq('client_id', client.id).order('created_at', { ascending: false }),
+    supabase.from('monthly_objectives').select('*').eq('client_id', client.id).order('year', { ascending: false }).order('month', { ascending: false }),
   ])
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold text-gray-900">{client?.name}</h1>
+        <h1 className="text-2xl font-semibold text-gray-900">{client.name}</h1>
         <p className="text-gray-500 text-sm mt-0.5">Acompanhe suas entregas e métricas</p>
       </div>
-      <ScopeView scope={client?.scope_description} objectives={monthlyObjectives ?? []} />
-      <DeliverableView deliverables={deliverables ?? []} contractPieces={client?.contract_pieces ?? 8} />
+      <ScopeView scope={client.scope_description} objectives={monthlyObjectives ?? []} />
+      <DeliverableView deliverables={deliverables ?? []} contractPieces={client.contract_pieces} />
       <TrafficView metrics={metrics ?? []} />
       <BlockerView blockers={blockers ?? []} />
       <HighlightView highlights={highlights ?? []} />

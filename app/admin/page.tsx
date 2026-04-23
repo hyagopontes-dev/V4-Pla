@@ -4,8 +4,7 @@ import { Users, TrendingUp, Package, Plus } from 'lucide-react'
 
 export default async function AdminHome() {
   const supabase = await createServerSupabase()
-  const { data: clients } = await supabase
-    .from('clients').select('*').order('name')
+  const { data: clients } = await supabase.from('clients').select('*').order('name')
 
   const totalClients = clients?.length ?? 0
   const activeClients = clients?.filter(c => c.active).length ?? 0
@@ -88,15 +87,10 @@ export default async function AdminHome() {
                   <td className="px-5 py-3 text-gray-500 font-mono text-xs">{client.slug}</td>
                   <td className="px-5 py-3 text-gray-700">{client.contract_pieces}</td>
                   <td className="px-5 py-3">
-                    {client.active
-                      ? <span className="badge-success">Ativo</span>
-                      : <span className="badge-neutral">Inativo</span>}
+                    {client.active ? <span className="badge-success">Ativo</span> : <span className="badge-neutral">Inativo</span>}
                   </td>
                   <td className="px-5 py-3 text-right">
-                    <Link
-                      href={`/admin/clients/${client.id}`}
-                      className="text-brand-500 hover:text-brand-700 text-xs font-medium"
-                    >
+                    <Link href={`/admin/clients/${client.id}`} className="text-brand-500 hover:text-brand-700 text-xs font-medium">
                       Gerenciar →
                     </Link>
                   </td>
