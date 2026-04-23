@@ -68,3 +68,13 @@ export interface OtherDeliverable {
   created_at: string
   updated_at: string
 }
+
+export interface ClientReference {
+  id: string
+  client_id: string
+  name: string
+  url?: string
+  type: 'visual' | 'concorrente' | 'referencia'
+  notes?: string
+  created_at: string
+}

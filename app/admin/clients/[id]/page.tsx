@@ -12,6 +12,7 @@ import CommLogManager from '@/components/admin/CommLogManager'
 import BlockerManager from '@/components/admin/BlockerManager'
 import HighlightManager from '@/components/admin/HighlightManager'
 import OrganicAnalysisManager from '@/components/admin/OrganicAnalysisManager'
+import ReferencesManager from '@/components/admin/ReferencesManager'
 
 export default async function ClientDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -30,6 +31,7 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
     { data: highlights },
     { data: organicAnalyses },
     { data: monthlyObjectives },
+    { data: references },
   ] = await Promise.all([
     supabase.from('deliverables').select('*').eq('client_id', id).order('year').order('month'),
     supabase.from('other_deliverables').select('*').eq('client_id', id).order('year', { ascending: false }).order('month', { ascending: false }),
@@ -40,6 +42,7 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
     supabase.from('highlights').select('*').eq('client_id', id).order('year', { ascending: false }).order('month', { ascending: false }),
     supabase.from('organic_analysis').select('*').eq('client_id', id).order('created_at', { ascending: false }),
     supabase.from('monthly_objectives').select('*').eq('client_id', id).order('year', { ascending: false }).order('month', { ascending: false }),
+    supabase.from('client_references').select('*').eq('client_id', id).order('type').order('name'),
   ])
 
   return (
@@ -75,6 +78,7 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
         <BlockerManager clientId={id} blockers={blockers ?? []} />
         <HighlightManager clientId={id} highlights={highlights ?? []} />
         <OrganicAnalysisManager clientId={id} analyses={organicAnalyses ?? []} />
+        <ReferencesManager clientId={id} references={references ?? []} />
         <ScopeManager client={client} monthlyObjectives={monthlyObjectives ?? []} />
         <UserManager clientId={id} clientSlug={client.slug} users={users ?? []} />
       </div>

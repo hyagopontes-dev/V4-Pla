@@ -7,6 +7,7 @@ import CommLogView from '@/components/client/CommLogView'
 import BlockerView from '@/components/client/BlockerView'
 import HighlightView from '@/components/client/HighlightView'
 import OrganicView from '@/components/client/OrganicView'
+import ReferencesView from '@/components/client/ReferencesView'
 
 export default async function DashboardPage({ searchParams }: { searchParams: Promise<{ client?: string }> }) {
   const { client: clientSlug } = await searchParams
@@ -32,6 +33,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
     { data: highlights },
     { data: organicAnalyses },
     { data: monthlyObjectives },
+    { data: references },
   ] = await Promise.all([
     supabase.from('deliverables').select('*').eq('client_id', client.id).order('year').order('month'),
     supabase.from('other_deliverables').select('*').eq('client_id', client.id).order('year', { ascending: false }).order('month', { ascending: false }),
@@ -41,6 +43,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
     supabase.from('highlights').select('*').eq('client_id', client.id).order('year', { ascending: false }).order('month', { ascending: false }),
     supabase.from('organic_analysis').select('*').eq('client_id', client.id).order('created_at', { ascending: false }),
     supabase.from('monthly_objectives').select('*').eq('client_id', client.id).order('year', { ascending: false }).order('month', { ascending: false }),
+    supabase.from('client_references').select('*').eq('client_id', client.id).order('type').order('name'),
   ])
 
   return (
@@ -56,6 +59,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
       <HighlightView highlights={highlights ?? []} />
       <CommLogView logs={commLogs ?? []} />
       <OrganicView analyses={organicAnalyses ?? []} />
+      <ReferencesView references={references ?? []} />
       <ScopeView scope={client.scope_description} objectives={monthlyObjectives ?? []} />
     </div>
   )
