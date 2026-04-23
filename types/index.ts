@@ -56,3 +56,15 @@ export interface MonthlyObjective {
   content: string
   updated_at: string
 }
+
+export interface OtherDeliverable {
+  id: string
+  client_id: string
+  month: number
+  year: number
+  description: string
+  status: 'pendente' | 'entregue' | 'concluido'
+  doc_url?: string
+  created_at: string
+  updated_at: string
+}

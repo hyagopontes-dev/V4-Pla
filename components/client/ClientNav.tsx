@@ -27,25 +27,23 @@ export default function ClientNav({ clientName, userEmail }: Props) {
   }
 
   return (
-    <header className="bg-white border-b border-gray-200 sticky top-0 z-10">
+    <header className="bg-black border-b border-white/10 sticky top-0 z-10">
       <div className="max-w-5xl mx-auto px-4 h-14 flex items-center justify-between">
         <div className="flex items-center gap-3">
           {isAdmin && (
-            <Link
-              href="/admin"
-              className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-gray-800 border border-gray-200 hover:border-gray-400 px-3 py-1.5 rounded-lg transition-colors mr-2"
-            >
-              <ArrowLeft size={13} /> Voltar ao admin
+            <Link href="/admin"
+              className="flex items-center gap-1.5 text-xs text-white/60 hover:text-white border border-white/20 hover:border-white/50 px-3 py-1.5 rounded-lg transition-colors mr-1">
+              <ArrowLeft size={13} /> Admin
             </Link>
           )}
-          <div className="w-7 h-7 bg-brand-500 rounded-lg flex items-center justify-center">
+          <div className="w-7 h-7 bg-red-600 rounded-lg flex items-center justify-center">
             <span className="text-white font-bold text-xs">v4</span>
           </div>
-          <span className="font-medium text-gray-900 text-sm">{clientName}</span>
+          <span className="font-medium text-white text-sm">{clientName}</span>
         </div>
         <div className="flex items-center gap-4">
-          <span className="text-xs text-gray-400 hidden sm:block">{userEmail}</span>
-          <button onClick={logout} className="flex items-center gap-1.5 text-gray-500 hover:text-gray-700 text-xs">
+          <span className="text-xs text-white/40 hidden sm:block">{userEmail}</span>
+          <button onClick={logout} className="flex items-center gap-1.5 text-white/60 hover:text-white text-xs transition-colors">
             <LogOut size={14} /> Sair
           </button>
         </div>

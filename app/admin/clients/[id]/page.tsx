@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, Eye } from 'lucide-react'
 import DeliverableManager from '@/components/admin/DeliverableManager'
+import OtherDeliverableManager from '@/components/admin/OtherDeliverableManager'
 import MetricsManager from '@/components/admin/MetricsManager'
 import UserManager from '@/components/admin/UserManager'
 import ClientEditForm from '@/components/admin/ClientEditForm'
@@ -21,6 +22,7 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
 
   const [
     { data: deliverables },
+    { data: otherDeliverables },
     { data: metrics },
     { data: users },
     { data: commLogs },
@@ -30,6 +32,7 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
     { data: monthlyObjectives },
   ] = await Promise.all([
     supabase.from('deliverables').select('*').eq('client_id', id).order('year').order('month'),
+    supabase.from('other_deliverables').select('*').eq('client_id', id).order('year', { ascending: false }).order('month', { ascending: false }),
     supabase.from('traffic_metrics').select('*').eq('client_id', id).order('year').order('month'),
     supabase.from('profiles').select('*').eq('client_id', id),
     supabase.from('comm_logs').select('*').eq('client_id', id).order('year', { ascending: false }).order('month', { ascending: false }),
@@ -45,12 +48,9 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
         <Link href="/admin" className="flex items-center gap-1 text-gray-500 hover:text-gray-700 text-sm">
           <ArrowLeft size={14} /> Voltar para clientes
         </Link>
-        <Link
-          href={`/dashboard?client=${client.slug}`}
-          target="_blank"
-          className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 border border-gray-200 hover:border-gray-400 px-4 py-2 rounded-lg transition-colors"
-        >
-          <Eye size={15} /> Ver dashboard do cliente
+        <Link href={`/dashboard?client=${client.slug}`} target="_blank"
+          className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 border border-gray-200 hover:border-gray-400 px-4 py-2 rounded-lg transition-colors">
+          <Eye size={15} /> Ver dashboard
         </Link>
       </div>
 
@@ -68,13 +68,14 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
 
       <div className="space-y-6">
         <ClientEditForm client={client} />
-        <ScopeManager client={client} monthlyObjectives={monthlyObjectives ?? []} />
         <DeliverableManager clientId={id} contractPieces={client.contract_pieces} deliverables={deliverables ?? []} />
+        <OtherDeliverableManager clientId={id} items={otherDeliverables ?? []} />
         <MetricsManager clientId={id} metrics={metrics ?? []} />
         <CommLogManager clientId={id} logs={commLogs ?? []} />
         <BlockerManager clientId={id} blockers={blockers ?? []} />
         <HighlightManager clientId={id} highlights={highlights ?? []} />
         <OrganicAnalysisManager clientId={id} analyses={organicAnalyses ?? []} />
+        <ScopeManager client={client} monthlyObjectives={monthlyObjectives ?? []} />
         <UserManager clientId={id} clientSlug={client.slug} users={users ?? []} />
       </div>
     </div>
