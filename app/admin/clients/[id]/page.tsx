@@ -75,7 +75,7 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
         <BlockerManager clientId={id} blockers={blockers ?? []} />
         <HighlightManager clientId={id} highlights={highlights ?? []} />
         <OrganicAnalysisManager clientId={id} analyses={organicAnalyses ?? []} />
-        <UserManager clientId={id} users={users ?? []} />
+        <UserManager clientId={id} clientSlug={client.slug} users={users ?? []} />
       </div>
     </div>
   )

@@ -1,20 +1,58 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 
 export default function ClientGuard({ children }: { children: React.ReactNode }) {
   const [checking, setChecking] = useState(true)
+  const [allowed, setAllowed] = useState(false)
   const router = useRouter()
+  const searchParams = useSearchParams()
   const supabase = createClient()
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (!session) {
         router.replace('/login')
         return
       }
-      // Admin e client podem ver o dashboard
+
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role, client_id, clients(slug)')
+        .eq('id', session.user.id)
+        .single()
+
+      // Admin pode ver qualquer dashboard
+      if (profile?.role === 'admin') {
+        setAllowed(true)
+        setChecking(false)
+        return
+      }
+
+      // Cliente só pode ver o próprio dashboard
+      const clientSlug = (profile as any)?.clients?.slug
+      const requestedSlug = searchParams.get('client')
+
+      if (!clientSlug) {
+        // Cliente sem vínculo
+        router.replace('/login')
+        return
+      }
+
+      if (requestedSlug && requestedSlug !== clientSlug) {
+        // Tentou acessar dashboard de outro cliente → redireciona para o dele
+        router.replace(`/dashboard?client=${clientSlug}`)
+        return
+      }
+
+      if (!requestedSlug) {
+        // Sem slug na URL → redireciona para o slug correto
+        router.replace(`/dashboard?client=${clientSlug}`)
+        return
+      }
+
+      setAllowed(true)
       setChecking(false)
     })
   }, [])
@@ -29,6 +67,8 @@ export default function ClientGuard({ children }: { children: React.ReactNode })
       </div>
     )
   }
+
+  if (!allowed) return null
 
   return <>{children}</>
 }
