@@ -12,6 +12,8 @@ export default function ClientEditForm({ client }: Props) {
     slug: client.slug,
     contract_pieces: String(client.contract_pieces),
     active: client.active,
+    logo_url: client.logo_url ?? '',
+    about: client.about ?? '',
   })
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
@@ -25,6 +27,8 @@ export default function ClientEditForm({ client }: Props) {
       slug: form.slug,
       contract_pieces: parseInt(form.contract_pieces),
       active: form.active,
+      logo_url: form.logo_url || null,
+      about: form.about || null,
     }).eq('id', client.id)
     setSaving(false)
     setSaved(true)
@@ -37,7 +41,7 @@ export default function ClientEditForm({ client }: Props) {
       <div className="px-5 py-4 border-b border-gray-100">
         <h2 className="font-medium text-gray-900">Dados do cliente</h2>
       </div>
-      <div className="p-5">
+      <div className="p-5 space-y-4">
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="label">Nome</label>
@@ -59,7 +63,22 @@ export default function ClientEditForm({ client }: Props) {
             </select>
           </div>
         </div>
-        <button onClick={handleSave} disabled={saving} className="btn-primary mt-4 disabled:opacity-60">
+        <div>
+          <label className="label">URL da logo (link de imagem)</label>
+          <input className="input" placeholder="https://..." value={form.logo_url} onChange={e => setForm(f => ({ ...f, logo_url: e.target.value }))} />
+          <p className="text-xs text-gray-400 mt-1">Cole o link direto de uma imagem (PNG, JPG). Ex: link do Google Drive, Imgur, etc.</p>
+        </div>
+        {form.logo_url && (
+          <div className="flex items-center gap-3">
+            <img src={form.logo_url} alt="Preview" className="h-12 object-contain rounded border border-gray-200 bg-gray-50 p-1" onError={e => (e.currentTarget.style.display = 'none')} />
+            <span className="text-xs text-gray-400">Preview da logo</span>
+          </div>
+        )}
+        <div>
+          <label className="label">Sobre o cliente</label>
+          <textarea className="input min-h-[80px] resize-y" placeholder="Breve descrição da empresa, segmento, diferenciais..." value={form.about} onChange={e => setForm(f => ({ ...f, about: e.target.value }))} />
+        </div>
+        <button onClick={handleSave} disabled={saving} className="btn-primary disabled:opacity-60">
           {saved ? 'Salvo!' : saving ? 'Salvando...' : 'Salvar alterações'}
         </button>
       </div>

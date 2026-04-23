@@ -15,7 +15,6 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   )
 
   const [
-    { data: igProfile },
     { data: deliverables },
     { data: otherDeliverables },
     { data: metrics },
@@ -27,7 +26,6 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
     { data: references },
     { data: planner },
   ] = await Promise.all([
-    supabase.from('instagram_profile').select('*').eq('client_id', client.id).single(),
     supabase.from('deliverables').select('*').eq('client_id', client.id).order('year').order('month'),
     supabase.from('other_deliverables').select('*').eq('client_id', client.id).order('year', { ascending: false }).order('month', { ascending: false }),
     supabase.from('traffic_metrics').select('*').eq('client_id', client.id),
@@ -43,7 +41,6 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   return (
     <DashboardClient
       client={client}
-      igProfile={igProfile ?? null}
       deliverables={deliverables ?? []}
       otherDeliverables={otherDeliverables ?? []}
       metrics={metrics ?? []}

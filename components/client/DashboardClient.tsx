@@ -1,6 +1,5 @@
 'use client'
 import { useState } from 'react'
-import { ExternalLink, Instagram } from 'lucide-react'
 import DeliverableView from './DeliverableView'
 import OtherDeliverableView from './OtherDeliverableView'
 import TrafficView from './TrafficView'
@@ -11,11 +10,14 @@ import OrganicView from './OrganicView'
 import ReferencesView from './ReferencesView'
 import ScopeView from './ScopeView'
 import PlannerView from './PlannerView'
-import type { Client, InstagramProfile, Deliverable, TrafficMetric, CommLog, Blocker, Highlight, OrganicAnalysis, MonthlyObjective, ClientReference, ContentPlanner, OtherDeliverable } from '@/types'
+import type {
+  Client, Deliverable, TrafficMetric, CommLog, Blocker,
+  Highlight, OrganicAnalysis, MonthlyObjective, ClientReference,
+  ContentPlanner, OtherDeliverable
+} from '@/types'
 
 interface Props {
   client: Client
-  igProfile: InstagramProfile | null
   deliverables: Deliverable[]
   otherDeliverables: OtherDeliverable[]
   metrics: TrafficMetric[]
@@ -28,79 +30,48 @@ interface Props {
   planner: ContentPlanner[]
 }
 
-function fmt(n: number): string {
-  if (n >= 1000000) return (n / 1000000).toFixed(1) + 'M'
-  if (n >= 1000) return (n / 1000).toFixed(1) + 'K'
-  return String(n)
-}
-
 const TABS = [
-  { key: 'entregas',  label: 'Entregas' },
+  { key: 'entregas',   label: 'Entregas' },
   { key: 'resultados', label: 'Resultados' },
-  { key: 'planner',   label: 'Planner de Conteúdo' },
+  { key: 'planner',    label: 'Planner de Conteúdo' },
 ]
 
-export default function DashboardClient({ client, igProfile, deliverables, otherDeliverables, metrics, commLogs, blockers, highlights, organicAnalyses, monthlyObjectives, references, planner }: Props) {
+export default function DashboardClient({
+  client, deliverables, otherDeliverables, metrics, commLogs,
+  blockers, highlights, organicAnalyses, monthlyObjectives, references, planner
+}: Props) {
   const [tab, setTab] = useState('entregas')
 
   return (
     <div>
-      {/* HEADER — Instagram style */}
+      {/* HEADER */}
       <div className="bg-black rounded-xl mb-6 overflow-hidden">
         <div className="p-6">
-          <div className="flex items-start gap-5 flex-wrap">
-            {/* Avatar + info */}
-            <div className="flex items-center gap-4 flex-1 min-w-0">
-              {igProfile?.avatar_url ? (
-                <img src={igProfile.avatar_url} alt={client.name}
-                  className="w-16 h-16 rounded-full border-2 border-red-500 object-cover flex-shrink-0" />
+          <div className="flex items-center gap-5 flex-wrap">
+            {/* Logo */}
+            <div className="w-16 h-16 rounded-xl border border-white/20 bg-white/5 flex items-center justify-center flex-shrink-0 overflow-hidden">
+              {client.logo_url ? (
+                <img src={client.logo_url} alt={client.name} className="w-full h-full object-contain p-1" />
               ) : (
-                <div className="w-16 h-16 rounded-full border-2 border-red-500 bg-gray-800 flex items-center justify-center flex-shrink-0">
-                  <Instagram size={24} className="text-red-500" />
-                </div>
+                <span className="text-white font-bold text-2xl">{client.name.charAt(0)}</span>
               )}
-              <div className="min-w-0">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <h1 className="text-white text-xl font-bold">{client.name}</h1>
-                  {igProfile?.instagram_url && (
-                    <a href={igProfile.instagram_url} target="_blank" rel="noopener"
-                      className="text-red-400 hover:text-red-300">
-                      <ExternalLink size={14} />
-                    </a>
-                  )}
-                </div>
-                {igProfile?.username && <p className="text-gray-400 text-sm">{igProfile.username}</p>}
-                {igProfile && (
-                  <div className="flex items-center gap-4 mt-2">
-                    <span className="text-white text-sm"><span className="font-bold">{fmt(igProfile.seguidores)}</span> <span className="text-gray-400 text-xs">seguidores</span></span>
-                    <span className="text-white text-sm"><span className="font-bold">{igProfile.posts}</span> <span className="text-gray-400 text-xs">posts</span></span>
-                    <span className="text-white text-sm"><span className="font-bold">{igProfile.seguindo}</span> <span className="text-gray-400 text-xs">seguindo</span></span>
-                  </div>
-                )}
-              </div>
             </div>
 
-            {/* Stats grid */}
-            {igProfile && (
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                <div className="bg-gray-900 rounded-lg p-3 text-center min-w-[90px]">
-                  <p className="text-gray-400 text-xs uppercase tracking-wide mb-1">Seguidores</p>
-                  <p className="text-red-400 text-lg font-bold">{fmt(igProfile.seguidores)}</p>
-                </div>
-                <div className="bg-gray-900 rounded-lg p-3 text-center min-w-[90px]">
-                  <p className="text-gray-400 text-xs uppercase tracking-wide mb-1">Eng. Médio</p>
-                  <p className="text-red-400 text-lg font-bold">{igProfile.eng_medio}%</p>
-                </div>
-                <div className="bg-gray-900 rounded-lg p-3 text-center min-w-[90px]">
-                  <p className="text-gray-400 text-xs uppercase tracking-wide mb-1">Views totais</p>
-                  <p className="text-white text-lg font-bold">{fmt(igProfile.views_totais)}</p>
-                </div>
-                <div className="bg-gray-900 rounded-lg p-3 text-center min-w-[90px]">
-                  <p className="text-gray-400 text-xs uppercase tracking-wide mb-1">Likes totais</p>
-                  <p className="text-white text-lg font-bold">{fmt(igProfile.likes_totais)}</p>
-                </div>
+            {/* Info */}
+            <div className="flex-1 min-w-0">
+              <h1 className="text-white text-2xl font-bold">{client.name}</h1>
+              {client.about && (
+                <p className="text-gray-400 text-sm mt-1 leading-relaxed max-w-2xl">{client.about}</p>
+              )}
+              <div className="flex items-center gap-3 mt-2 flex-wrap">
+                <span className="text-xs bg-red-600/20 text-red-400 border border-red-600/30 px-2 py-0.5 rounded-full">
+                  {client.contract_pieces} peças/mês
+                </span>
+                <span className={`text-xs px-2 py-0.5 rounded-full ${client.active ? 'bg-green-600/20 text-green-400 border border-green-600/30' : 'bg-gray-600/20 text-gray-400 border border-gray-600/30'}`}>
+                  {client.active ? 'Ativo' : 'Inativo'}
+                </span>
               </div>
-            )}
+            </div>
           </div>
         </div>
 
@@ -108,9 +79,11 @@ export default function DashboardClient({ client, igProfile, deliverables, other
         <div className="flex border-t border-white/10">
           {TABS.map(t => (
             <button key={t.key} onClick={() => setTab(t.key)}
-              className={`flex-1 py-3 text-sm font-medium transition-colors ${tab === t.key
-                ? 'text-red-400 border-b-2 border-red-500 bg-white/5'
-                : 'text-gray-400 hover:text-white hover:bg-white/5'}`}>
+              className={`flex-1 py-3 text-sm font-medium transition-colors ${
+                tab === t.key
+                  ? 'text-red-400 border-b-2 border-red-500 bg-white/5'
+                  : 'text-gray-400 hover:text-white hover:bg-white/5'
+              }`}>
               {t.label}
             </button>
           ))}
