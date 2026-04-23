@@ -1,6 +1,6 @@
 import { createServerSupabase } from '@/lib/supabase-server'
 import Link from 'next/link'
-import { Users, TrendingUp, Package, Plus } from 'lucide-react'
+import { Users, TrendingUp, Package, Plus, Eye } from 'lucide-react'
 
 export default async function AdminHome() {
   const supabase = await createServerSupabase()
@@ -77,7 +77,7 @@ export default async function AdminHome() {
                 <th className="text-left px-5 py-3 text-xs font-medium text-gray-500">Slug</th>
                 <th className="text-left px-5 py-3 text-xs font-medium text-gray-500">Peças/mês</th>
                 <th className="text-left px-5 py-3 text-xs font-medium text-gray-500">Status</th>
-                <th className="px-5 py-3"></th>
+                <th className="px-5 py-3 text-xs font-medium text-gray-500 text-right">Ações</th>
               </tr>
             </thead>
             <tbody>
@@ -87,12 +87,26 @@ export default async function AdminHome() {
                   <td className="px-5 py-3 text-gray-500 font-mono text-xs">{client.slug}</td>
                   <td className="px-5 py-3 text-gray-700">{client.contract_pieces}</td>
                   <td className="px-5 py-3">
-                    {client.active ? <span className="badge-success">Ativo</span> : <span className="badge-neutral">Inativo</span>}
+                    {client.active
+                      ? <span className="badge-success">Ativo</span>
+                      : <span className="badge-neutral">Inativo</span>}
                   </td>
-                  <td className="px-5 py-3 text-right">
-                    <Link href={`/admin/clients/${client.id}`} className="text-brand-500 hover:text-brand-700 text-xs font-medium">
-                      Gerenciar →
-                    </Link>
+                  <td className="px-5 py-3">
+                    <div className="flex items-center gap-3 justify-end">
+                      <Link
+                        href={`/dashboard?client=${client.slug}`}
+                        className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-gray-800 border border-gray-200 hover:border-gray-400 px-3 py-1.5 rounded-lg transition-colors"
+                        target="_blank"
+                      >
+                        <Eye size={13} /> Ver dashboard
+                      </Link>
+                      <Link
+                        href={`/admin/clients/${client.id}`}
+                        className="text-brand-500 hover:text-brand-700 text-xs font-medium"
+                      >
+                        Gerenciar →
+                      </Link>
+                    </div>
                   </td>
                 </tr>
               ))}

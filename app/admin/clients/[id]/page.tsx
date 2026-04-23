@@ -1,7 +1,7 @@
 import { createServerSupabase } from '@/lib/supabase-server'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft, Eye } from 'lucide-react'
 import DeliverableManager from '@/components/admin/DeliverableManager'
 import MetricsManager from '@/components/admin/MetricsManager'
 import UserManager from '@/components/admin/UserManager'
@@ -41,9 +41,19 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
 
   return (
     <div>
-      <Link href="/admin" className="flex items-center gap-1 text-gray-500 hover:text-gray-700 text-sm mb-6">
-        <ArrowLeft size={14} /> Voltar para clientes
-      </Link>
+      <div className="flex items-center justify-between mb-6">
+        <Link href="/admin" className="flex items-center gap-1 text-gray-500 hover:text-gray-700 text-sm">
+          <ArrowLeft size={14} /> Voltar para clientes
+        </Link>
+        <Link
+          href={`/dashboard?client=${client.slug}`}
+          target="_blank"
+          className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 border border-gray-200 hover:border-gray-400 px-4 py-2 rounded-lg transition-colors"
+        >
+          <Eye size={15} /> Ver dashboard do cliente
+        </Link>
+      </div>
+
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-semibold text-gray-900">{client.name}</h1>
@@ -55,6 +65,7 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
           {client.active ? 'Ativo' : 'Inativo'}
         </span>
       </div>
+
       <div className="space-y-6">
         <ClientEditForm client={client} />
         <ScopeManager client={client} monthlyObjectives={monthlyObjectives ?? []} />

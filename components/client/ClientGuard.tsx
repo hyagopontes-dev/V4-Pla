@@ -12,9 +12,10 @@ export default function ClientGuard({ children }: { children: React.ReactNode })
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (!session) {
         router.replace('/login')
-      } else {
-        setChecking(false)
+        return
       }
+      // Admin e client podem ver o dashboard
+      setChecking(false)
     })
   }, [])
 
