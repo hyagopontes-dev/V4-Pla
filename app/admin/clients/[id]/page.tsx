@@ -13,15 +13,17 @@ import BlockerManager from '@/components/admin/BlockerManager'
 import HighlightManager from '@/components/admin/HighlightManager'
 import OrganicAnalysisManager from '@/components/admin/OrganicAnalysisManager'
 import ReferencesManager from '@/components/admin/ReferencesManager'
+import InstagramManager from '@/components/admin/InstagramManager'
+import ContentPlannerManager from '@/components/admin/ContentPlannerManager'
 
 export default async function ClientDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   const supabase = await createServerSupabase()
-
   const { data: client } = await supabase.from('clients').select('*').eq('id', id).single()
   if (!client) notFound()
 
   const [
+    { data: igProfile },
     { data: deliverables },
     { data: otherDeliverables },
     { data: metrics },
@@ -32,7 +34,9 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
     { data: organicAnalyses },
     { data: monthlyObjectives },
     { data: references },
+    { data: planner },
   ] = await Promise.all([
+    supabase.from('instagram_profile').select('*').eq('client_id', id).single(),
     supabase.from('deliverables').select('*').eq('client_id', id).order('year').order('month'),
     supabase.from('other_deliverables').select('*').eq('client_id', id).order('year', { ascending: false }).order('month', { ascending: false }),
     supabase.from('traffic_metrics').select('*').eq('client_id', id).order('year').order('month'),
@@ -43,36 +47,33 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
     supabase.from('organic_analysis').select('*').eq('client_id', id).order('created_at', { ascending: false }),
     supabase.from('monthly_objectives').select('*').eq('client_id', id).order('year', { ascending: false }).order('month', { ascending: false }),
     supabase.from('client_references').select('*').eq('client_id', id).order('type').order('name'),
+    supabase.from('content_planner').select('*').eq('client_id', id).order('year', { ascending: false }).order('month', { ascending: false }),
   ])
 
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
         <Link href="/admin" className="flex items-center gap-1 text-gray-500 hover:text-gray-700 text-sm">
-          <ArrowLeft size={14} /> Voltar para clientes
+          <ArrowLeft size={14} /> Voltar
         </Link>
         <Link href={`/dashboard?client=${client.slug}`} target="_blank"
           className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 border border-gray-200 hover:border-gray-400 px-4 py-2 rounded-lg transition-colors">
           <Eye size={15} /> Ver dashboard
         </Link>
       </div>
-
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-semibold text-gray-900">{client.name}</h1>
-          <p className="text-gray-500 text-sm mt-0.5">
-            {client.contract_pieces} peças/mês · slug: <span className="font-mono">{client.slug}</span>
-          </p>
+          <p className="text-gray-500 text-sm mt-0.5">{client.contract_pieces} peças/mês · <span className="font-mono">{client.slug}</span></p>
         </div>
-        <span className={client.active ? 'badge-success' : 'badge-neutral'}>
-          {client.active ? 'Ativo' : 'Inativo'}
-        </span>
+        <span className={client.active ? 'badge-success' : 'badge-neutral'}>{client.active ? 'Ativo' : 'Inativo'}</span>
       </div>
-
       <div className="space-y-6">
         <ClientEditForm client={client} />
+        <InstagramManager clientId={id} profile={igProfile ?? null} />
         <DeliverableManager clientId={id} contractPieces={client.contract_pieces} deliverables={deliverables ?? []} />
         <OtherDeliverableManager clientId={id} items={otherDeliverables ?? []} />
+        <ContentPlannerManager clientId={id} items={planner ?? []} />
         <MetricsManager clientId={id} metrics={metrics ?? []} />
         <CommLogManager clientId={id} logs={commLogs ?? []} />
         <BlockerManager clientId={id} blockers={blockers ?? []} />

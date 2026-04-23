@@ -78,3 +78,34 @@ export interface ClientReference {
   notes?: string
   created_at: string
 }
+
+export interface InstagramProfile {
+  id: string
+  client_id: string
+  instagram_url?: string
+  username?: string
+  avatar_url?: string
+  seguidores: number
+  seguindo: number
+  posts: number
+  eng_medio: number
+  views_totais: number
+  likes_totais: number
+  comentarios: number
+  updated_at: string
+}
+
+export interface ContentPlanner {
+  id: string
+  client_id: string
+  month: number
+  year: number
+  day_of_week: 'segunda'|'terca'|'quarta'|'quinta'|'sexta'|'sabado'|'domingo'
+  title: string
+  description?: string
+  format?: string
+  recording_url?: string
+  status: 'roteiro'|'gravando'|'gravado'|'publicado'
+  created_at: string
+  updated_at: string
+}
