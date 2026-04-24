@@ -3,7 +3,7 @@ import { useState, useRef } from 'react'
 import { createClient } from '@/lib/supabase'
 import { Client } from '@/types'
 import { useRouter } from 'next/navigation'
-import { Upload, X } from 'lucide-react'
+import { Upload, X, ImageIcon } from 'lucide-react'
 
 interface Props { client: Client }
 
@@ -19,6 +19,7 @@ export default function ClientEditForm({ client }: Props) {
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
   const [uploading, setUploading] = useState(false)
+  const [uploadError, setUploadError] = useState('')
   const fileRef = useRef<HTMLInputElement>(null)
   const router = useRouter()
   const supabase = createClient()
@@ -27,20 +28,26 @@ export default function ClientEditForm({ client }: Props) {
     const file = e.target.files?.[0]
     if (!file) return
     setUploading(true)
+    setUploadError('')
 
-    const ext = file.name.split('.').pop()
-    const path = `logos/${client.id}.${ext}`
+    const ext = file.name.split('.').pop()?.toLowerCase() ?? 'png'
+    const path = `logos/${client.id}-${Date.now()}.${ext}`
 
-    const { error } = await supabase.storage
+    const { data, error } = await supabase.storage
       .from('client-assets')
-      .upload(path, file, { upsert: true })
+      .upload(path, file, { upsert: true, contentType: file.type })
 
-    if (!error) {
-      const { data: { publicUrl } } = supabase.storage
-        .from('client-assets')
-        .getPublicUrl(path)
-      setForm(f => ({ ...f, logo_url: publicUrl }))
+    if (error) {
+      setUploadError('Erro ao enviar: ' + error.message)
+      setUploading(false)
+      return
     }
+
+    const { data: urlData } = supabase.storage
+      .from('client-assets')
+      .getPublicUrl(path)
+
+    setForm(f => ({ ...f, logo_url: urlData.publicUrl }))
     setUploading(false)
   }
 
@@ -69,11 +76,13 @@ export default function ClientEditForm({ client }: Props) {
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="label">Nome</label>
-            <input className="input" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} />
+            <input className="input" value={form.name}
+              onChange={e => setForm(f => ({ ...f, name: e.target.value }))} />
           </div>
           <div>
             <label className="label">Slug</label>
-            <input className="input font-mono" value={form.slug} onChange={e => setForm(f => ({ ...f, slug: e.target.value }))} />
+            <input className="input font-mono" value={form.slug}
+              onChange={e => setForm(f => ({ ...f, slug: e.target.value }))} />
           </div>
           <div>
             <label className="label">Peças contratadas/mês</label>
@@ -90,61 +99,54 @@ export default function ClientEditForm({ client }: Props) {
           </div>
         </div>
 
-        {/* Logo upload */}
+        {/* Logo */}
         <div>
           <label className="label">Logo do cliente</label>
           <div className="flex items-center gap-4">
-            {/* Preview */}
-            <div className="w-16 h-16 rounded-xl border-2 border-dashed border-gray-200 bg-gray-50 flex items-center justify-center flex-shrink-0 overflow-hidden">
+            <div className="w-20 h-20 rounded-xl border-2 border-dashed border-gray-200 bg-gray-50 flex items-center justify-center flex-shrink-0 overflow-hidden">
               {form.logo_url ? (
-                <img src={form.logo_url} alt="Logo" className="w-full h-full object-contain p-1" />
+                <img
+                  src={form.logo_url}
+                  alt="Logo"
+                  className="w-full h-full object-contain p-1"
+                  onError={e => {
+                    e.currentTarget.style.display = 'none'
+                    setUploadError('Imagem não carregou. Verifique o bucket no Supabase.')
+                  }}
+                />
               ) : (
-                <Upload size={20} className="text-gray-300" />
+                <ImageIcon size={24} className="text-gray-300" />
               )}
             </div>
             <div className="flex-1 space-y-2">
-              <input
-                ref={fileRef}
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={handleLogoUpload}
-              />
-              <button
-                type="button"
-                onClick={() => fileRef.current?.click()}
-                disabled={uploading}
-                className="btn-secondary text-xs py-1.5 flex items-center gap-2 disabled:opacity-60"
-              >
+              <input ref={fileRef} type="file" accept="image/png,image/jpeg,image/jpg,image/svg+xml,image/webp"
+                className="hidden" onChange={handleLogoUpload} />
+              <button type="button" onClick={() => fileRef.current?.click()} disabled={uploading}
+                className="btn-secondary text-xs py-2 flex items-center gap-2 disabled:opacity-60">
                 <Upload size={13} />
                 {uploading ? 'Enviando...' : 'Fazer upload da logo'}
               </button>
               {form.logo_url && (
-                <button
-                  type="button"
-                  onClick={() => setForm(f => ({ ...f, logo_url: '' }))}
-                  className="flex items-center gap-1 text-xs text-red-400 hover:text-red-600"
-                >
+                <button type="button" onClick={() => setForm(f => ({ ...f, logo_url: '' }))}
+                  className="flex items-center gap-1 text-xs text-red-400 hover:text-red-600">
                   <X size={12} /> Remover logo
                 </button>
               )}
-              <p className="text-xs text-gray-400">PNG, JPG ou SVG. Recomendado: fundo transparente.</p>
+              {uploadError && <p className="text-xs text-red-500">{uploadError}</p>}
+              <p className="text-xs text-gray-400">PNG, JPG, SVG ou WebP. Fundo transparente recomendado.</p>
             </div>
           </div>
         </div>
 
         <div>
           <label className="label">Sobre o cliente</label>
-          <textarea
-            className="input min-h-[80px] resize-y"
+          <textarea className="input min-h-[80px] resize-y"
             placeholder="Breve descrição da empresa, segmento, diferenciais..."
-            value={form.about}
-            onChange={e => setForm(f => ({ ...f, about: e.target.value }))}
-          />
+            value={form.about} onChange={e => setForm(f => ({ ...f, about: e.target.value }))} />
         </div>
 
         <button onClick={handleSave} disabled={saving} className="btn-primary disabled:opacity-60">
-          {saved ? 'Salvo!' : saving ? 'Salvando...' : 'Salvar alterações'}
+          {saved ? '✓ Salvo!' : saving ? 'Salvando...' : 'Salvar alterações'}
         </button>
       </div>
     </div>

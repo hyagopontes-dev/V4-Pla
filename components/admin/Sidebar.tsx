@@ -1,13 +1,14 @@
 'use client'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { LayoutDashboard, Users, LogOut } from 'lucide-react'
+import { LayoutDashboard, Users, LogOut, Sparkles } from 'lucide-react'
 import { createClient } from '@/lib/supabase'
 import clsx from 'clsx'
 
 const nav = [
-  { href: '/admin', label: 'Painel', icon: LayoutDashboard },
+  { href: '/admin',    label: 'Painel',   icon: LayoutDashboard },
   { href: '/admin/clients', label: 'Clientes', icon: Users },
+  { href: '/admin/ai', label: 'IA Studio', icon: Sparkles },
 ]
 
 export default function AdminSidebar() {
@@ -34,16 +35,20 @@ export default function AdminSidebar() {
         </div>
       </div>
       <nav className="flex-1 p-3 space-y-1">
-        {nav.map(({ href, label, icon: Icon }) => (
-          <Link key={href} href={href}
-            className={clsx('flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors',
-              pathname === href || (href !== '/admin' && pathname.startsWith(href))
-                ? 'bg-red-600 text-white'
-                : 'text-white/60 hover:text-white hover:bg-white/10'
-            )}>
-            <Icon size={16} /> {label}
-          </Link>
-        ))}
+        {nav.map(({ href, label, icon: Icon }) => {
+          const active = pathname === href || (href !== '/admin' && pathname.startsWith(href))
+          return (
+            <Link key={href} href={href}
+              className={clsx('flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors',
+                active ? 'bg-red-600 text-white' : 'text-white/60 hover:text-white hover:bg-white/10'
+              )}>
+              <Icon size={16} /> {label}
+              {href === '/admin/ai' && !active && (
+                <span className="ml-auto text-xs bg-red-600/30 text-red-400 px-1.5 py-0.5 rounded-full">NEW</span>
+              )}
+            </Link>
+          )
+        })}
       </nav>
       <div className="p-3 border-t border-white/10">
         <button onClick={logout}
