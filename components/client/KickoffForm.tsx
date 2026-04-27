@@ -166,8 +166,7 @@ export default function KickoffForm({ client, alreadySubmitted, submittedAt }: P
       <div className="max-w-2xl mx-auto px-6 py-8 space-y-6">
         {section.fields.map(field => (
           <div key={field.key} className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-            <label className="block text-sm font-semibold text-gray-800 mb-1">{field.label}</label>
-            <p className="text-gray-500 text-sm mb-3 leading-relaxed">{field.question}</p>
+            <p className="text-gray-800 text-sm font-medium mb-3 leading-relaxed">{field.question}</p>
             <textarea
               className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent resize-none min-h-[100px]"
               placeholder="Escreva aqui..."
