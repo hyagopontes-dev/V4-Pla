@@ -66,6 +66,17 @@ export async function POST(request: NextRequest) {
 
     console.log('[Google] calling API for customer:', cleanId, 'period:', startDate, '->', endDate)
 
+    // First, try to list accessible customers to find the right ID
+    try {
+      const listRes = await fetch('https://googleads.googleapis.com/v17/customers:listAccessibleCustomers', {
+        headers: { 'Authorization': `Bearer ${access_token}`, 'developer-token': devToken }
+      })
+      const listText = await listRes.text()
+      console.log('[Google] accessible customers status:', listRes.status, 'body:', listText.slice(0, 500))
+    } catch (e: any) {
+      console.log('[Google] list customers error:', e.message)
+    }
+
     // Try v17 then v16
     for (const ver of ['v17', 'v16']) {
       const url = `https://googleads.googleapis.com/${ver}/customers/${cleanId}/googleAds:search`
