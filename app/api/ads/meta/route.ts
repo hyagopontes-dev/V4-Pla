@@ -4,81 +4,104 @@ const BASE = 'https://graph.facebook.com/v19.0'
 const CACHE = new Map<string, { data: any; ts: number }>()
 const TTL = 5 * 60 * 1000
 
-// Mapeia action_type para label legível
-function getResultLabel(objective: string, actions: any[]): { value: number; label: string; costLabel: string } {
-  const OBJ_MAP: Record<string, { types: string[]; label: string }> = {
-    OUTCOME_LEADS:         { types: ['lead','onsite_conversion.lead_grouped'], label: 'Leads' },
-    OUTCOME_SALES:         { types: ['purchase','offsite_conversion.fb_pixel_purchase'], label: 'Compras' },
-    OUTCOME_TRAFFIC:       { types: ['link_click','landing_page_view'], label: 'Cliques no link' },
-    OUTCOME_ENGAGEMENT:    { types: ['post_engagement','page_engagement'], label: 'Engajamentos' },
-    OUTCOME_APP_PROMOTION: { types: ['app_install','mobile_app_install'], label: 'Instalações' },
-    OUTCOME_AWARENESS:     { types: ['reach'], label: 'Alcance' },
-    LEAD_GENERATION:       { types: ['lead','onsite_conversion.lead_grouped'], label: 'Leads' },
-    CONVERSIONS:           { types: ['purchase','offsite_conversion.fb_pixel_purchase','lead'], label: 'Conversões' },
-    MESSAGES:              { types: ['onsite_conversion.messaging_conversation_started_7d','onsite_conversion.messaging_first_reply'], label: 'Conversas' },
-    LINK_CLICKS:           { types: ['link_click'], label: 'Cliques no link' },
-    POST_ENGAGEMENT:       { types: ['post_engagement'], label: 'Engajamentos' },
-    VIDEO_VIEWS:           { types: ['video_view','thruplay'], label: 'Visualizações' },
-    REACH:                 { types: ['reach'], label: 'Alcance' },
-    PAGE_LIKES:            { types: ['like'], label: 'Curtidas na página' },
-  }
-
-  const mapping = OBJ_MAP[objective] ?? { types: ['link_click','lead','purchase'], label: 'Resultados' }
-
-  let bestAction = null
-  for (const type of mapping.types) {
-    const found = actions.find((a: any) => a.action_type === type)
-    if (found) { bestAction = found; break }
-  }
-
-  return {
-    value: bestAction ? parseInt(bestAction.value) : 0,
-    label: mapping.label,
-    costLabel: `Custo por ${mapping.label.toLowerCase().replace('s','').trim()}`,
-  }
+// Todos os action_types possíveis mapeados para label
+const ACTION_LABELS: Record<string, string> = {
+  'lead': 'Leads',
+  'onsite_conversion.lead_grouped': 'Leads',
+  'purchase': 'Compras',
+  'offsite_conversion.fb_pixel_purchase': 'Compras',
+  'complete_registration': 'Cadastros',
+  'link_click': 'Cliques no link',
+  'landing_page_view': 'Views de landing page',
+  'onsite_conversion.messaging_conversation_started_7d': 'Conversas iniciadas',
+  'onsite_conversion.messaging_first_reply': 'Respostas',
+  'post_engagement': 'Engajamentos',
+  'page_engagement': 'Engajamentos',
+  'video_view': 'Views de vídeo',
+  'thruplay': 'ThruPlays',
+  'app_install': 'Instalações',
+  'mobile_app_install': 'Instalações',
+  'omni_complete_registration': 'Cadastros',
+  'omni_initiated_checkout': 'Checkouts iniciados',
+  'omni_purchase': 'Compras',
+  'omni_add_to_cart': 'Adições ao carrinho',
+  'like': 'Curtidas',
+  'comment': 'Comentários',
+  'share': 'Compartilhamentos',
 }
 
-function getCostPerResult(objective: string, costPerActions: any[]): number {
-  const OBJ_MAP: Record<string, string[]> = {
-    OUTCOME_LEADS:         ['lead','onsite_conversion.lead_grouped'],
-    OUTCOME_SALES:         ['purchase','offsite_conversion.fb_pixel_purchase'],
-    OUTCOME_TRAFFIC:       ['link_click','landing_page_view'],
-    OUTCOME_ENGAGEMENT:    ['post_engagement'],
-    LEAD_GENERATION:       ['lead','onsite_conversion.lead_grouped'],
-    CONVERSIONS:           ['purchase','offsite_conversion.fb_pixel_purchase','lead'],
-    MESSAGES:              ['onsite_conversion.messaging_conversation_started_7d'],
-    LINK_CLICKS:           ['link_click'],
-    POST_ENGAGEMENT:       ['post_engagement'],
-    VIDEO_VIEWS:           ['video_view','thruplay'],
+// Prioridade de qual action_type usar como "resultado" por objetivo
+const OBJECTIVE_PRIORITY: Record<string, string[]> = {
+  OUTCOME_LEADS: ['lead','onsite_conversion.lead_grouped','omni_complete_registration'],
+  OUTCOME_SALES: ['purchase','offsite_conversion.fb_pixel_purchase','omni_purchase'],
+  OUTCOME_TRAFFIC: ['landing_page_view','link_click'],
+  OUTCOME_ENGAGEMENT: ['post_engagement','page_engagement','video_view'],
+  OUTCOME_APP_PROMOTION: ['app_install','mobile_app_install'],
+  OUTCOME_AWARENESS: ['video_view','thruplay','reach'],
+  LEAD_GENERATION: ['lead','onsite_conversion.lead_grouped'],
+  CONVERSIONS: ['purchase','offsite_conversion.fb_pixel_purchase','lead','omni_purchase'],
+  MESSAGES: ['onsite_conversion.messaging_conversation_started_7d','onsite_conversion.messaging_first_reply'],
+  LINK_CLICKS: ['landing_page_view','link_click'],
+  POST_ENGAGEMENT: ['post_engagement','video_view'],
+  VIDEO_VIEWS: ['thruplay','video_view'],
+  PAGE_LIKES: ['like'],
+  REACH: ['reach'],
+}
+
+function getBestResult(objective: string, actions: any[], costPerActions: any[]) {
+  const priority = OBJECTIVE_PRIORITY[objective] ?? []
+  
+  // Tenta pelo objetivo definido primeiro
+  for (const type of priority) {
+    const action = actions.find((a: any) => a.action_type === type)
+    if (action && parseInt(action.value) > 0) {
+      const costAction = costPerActions.find((a: any) => a.action_type === type)
+      return {
+        value: parseInt(action.value),
+        label: ACTION_LABELS[type] ?? type,
+        cost: costAction ? parseFloat(costAction.value) : 0,
+      }
+    }
   }
 
-  const types = OBJ_MAP[objective] ?? ['link_click','lead','purchase']
-  for (const type of types) {
-    const found = costPerActions.find((a: any) => a.action_type === type)
-    if (found) return parseFloat(found.value)
+  // Fallback: pega o action com maior valor que não seja reach/impression
+  const SKIP = ['reach','impression','frequency']
+  let best: any = null
+  let bestVal = 0
+  for (const action of actions) {
+    if (SKIP.some(s => action.action_type.includes(s))) continue
+    const val = parseInt(action.value ?? '0')
+    if (val > bestVal) { bestVal = val; best = action }
   }
-  return 0
+  
+  if (best) {
+    const costAction = costPerActions.find((a: any) => a.action_type === best.action_type)
+    return {
+      value: bestVal,
+      label: ACTION_LABELS[best.action_type] ?? best.action_type,
+      cost: costAction ? parseFloat(costAction.value) : 0,
+    }
+  }
+
+  return { value: 0, label: 'Resultados', cost: 0 }
 }
 
 export async function POST(request: NextRequest) {
-  const { access_token, account_id, date_preset, time_range } = await request.json()
+  const { access_token, account_id, date_preset } = await request.json()
   if (!access_token || !account_id)
     return NextResponse.json({ error: 'Token ou Account ID ausente' }, { status: 400 })
 
   const cleanId = account_id.replace('act_', '')
-  const cacheKey = `meta-${cleanId}-${date_preset}-${JSON.stringify(time_range)}`
+  const cacheKey = `meta-${cleanId}-${date_preset}`
   const cached = CACHE.get(cacheKey)
   if (cached && Date.now() - cached.ts < TTL) return NextResponse.json(cached.data)
 
-  const baseParams: Record<string,string> = { access_token }
-  if (date_preset) baseParams.date_preset = date_preset
-  if (time_range) baseParams.time_range = JSON.stringify(time_range)
+  const baseParams: Record<string,string> = { access_token, date_preset: date_preset ?? 'this_month' }
 
-  // Busca conta, campanhas e diário em paralelo
-  const [accountRes, campaignInsightsRes, campaignListRes, dailyRes] = await Promise.all([
+  const [accountRes, campaignRes, campaignListRes, dailyRes] = await Promise.all([
     fetch(`${BASE}/act_${cleanId}/insights?${new URLSearchParams({
       ...baseParams, level: 'account',
-      fields: 'spend,impressions,clicks,ctr,cpm,reach,frequency,actions,cost_per_action_type,date_start,date_stop,unique_clicks'
+      fields: 'spend,impressions,clicks,ctr,cpm,reach,frequency,actions,cost_per_action_type,date_start,date_stop'
     })}`),
     fetch(`${BASE}/act_${cleanId}/insights?${new URLSearchParams({
       ...baseParams, level: 'campaign', limit: '20',
@@ -93,38 +116,31 @@ export async function POST(request: NextRequest) {
     })}`),
   ])
 
-  const [accountRaw, campaignInsightsRaw, campaignListRaw, dailyRaw] = await Promise.all([
-    accountRes.json(), campaignInsightsRes.json(), campaignListRes.json(), dailyRes.json()
+  const [accountRaw, campaignRaw, campaignListRaw, dailyRaw] = await Promise.all([
+    accountRes.json(), campaignRes.json(), campaignListRes.json(), dailyRes.json()
   ])
 
   if (accountRaw.error) return NextResponse.json({ error: accountRaw.error.message }, { status: 400 })
-
   const insight = accountRaw.data?.[0]
   if (!insight) return NextResponse.json({ error: 'Sem dados para este período' }, { status: 404 })
 
-  // Mapeia campaign_id → objective
-  const objectiveMap: Record<string, string> = {}
-  ;(campaignListRaw.data ?? []).forEach((c: any) => { objectiveMap[c.id] = c.objective })
+  // Map campaign_id → objective
+  const objMap: Record<string, string> = {}
+  ;(campaignListRaw.data ?? []).forEach((c: any) => { objMap[c.id] = c.objective })
 
-  // Overview
-  const CONV_TYPES = ['purchase','lead','offsite_conversion.fb_pixel_purchase','complete_registration','onsite_conversion.lead_grouped']
+  // Overview actions
   const actions = insight.actions ?? []
   const costPer = insight.cost_per_action_type ?? []
-  const convAction = actions.find((a: any) => CONV_TYPES.includes(a.action_type))
-  const cprAction = costPer.find((a: any) => CONV_TYPES.includes(a.action_type))
   const linkClicks = actions.find((a: any) => a.action_type === 'link_click')
   const landingViews = actions.find((a: any) => a.action_type === 'landing_page_view')
   const msgStarts = actions.find((a: any) => a.action_type === 'onsite_conversion.messaging_conversation_started_7d')
   const videoViews = actions.find((a: any) => a.action_type === 'video_view')
+  const overviewResult = getBestResult('CONVERSIONS', actions, costPer)
 
-  // Campanhas com objetivo e resultado correto
-  const campaigns = (campaignInsightsRaw.data ?? []).map((c: any) => {
-    const objective = c.objective ?? objectiveMap[c.campaign_id] ?? 'OUTCOME_TRAFFIC'
-    const cActions = c.actions ?? []
-    const cCostPer = c.cost_per_action_type ?? []
-    const result = getResultLabel(objective, cActions)
-    const cpr = getCostPerResult(objective, cCostPer)
-
+  // Campanhas
+  const campaigns = (campaignRaw.data ?? []).map((c: any) => {
+    const objective = c.objective ?? objMap[c.campaign_id] ?? 'OUTCOME_TRAFFIC'
+    const result = getBestResult(objective, c.actions ?? [], c.cost_per_action_type ?? [])
     return {
       name: c.campaign_name,
       objective,
@@ -136,26 +152,24 @@ export async function POST(request: NextRequest) {
       reach: parseInt(c.reach ?? '0'),
       result_value: result.value,
       result_label: result.label,
-      result_cost: cpr,
-      result_cost_label: result.costLabel,
+      result_cost: result.cost,
     }
   })
 
   const daily = (dailyRaw.data ?? []).map((d: any) => {
     const dActions = d.actions ?? []
-    const dConv = dActions.find((a: any) => CONV_TYPES.includes(a.action_type))
+    const dResult = getBestResult('CONVERSIONS', dActions, [])
     return {
       date: d.date_start,
       spend: parseFloat(d.spend ?? '0'),
       impressions: parseInt(d.impressions ?? '0'),
       clicks: parseInt(d.clicks ?? '0'),
-      conversions: dConv ? parseInt(dConv.value) : 0,
+      conversions: dResult.value,
     }
   }).sort((a: any, b: any) => a.date.localeCompare(b.date))
 
   const result = {
-    platform: 'meta',
-    period: `${insight.date_start} → ${insight.date_stop}`,
+    platform: 'meta', period: `${insight.date_start} → ${insight.date_stop}`,
     overview: {
       spend: parseFloat(insight.spend ?? '0'),
       impressions: parseInt(insight.impressions ?? '0'),
@@ -164,15 +178,15 @@ export async function POST(request: NextRequest) {
       cpm: parseFloat(insight.cpm ?? '0'),
       reach: parseInt(insight.reach ?? '0'),
       frequency: parseFloat(insight.frequency ?? '0'),
-      conversions: convAction ? parseInt(convAction.value) : 0,
-      cpr: cprAction ? parseFloat(cprAction.value) : 0,
+      conversions: overviewResult.value,
+      cpr: overviewResult.cost,
+      result_label: overviewResult.label,
       link_clicks: linkClicks ? parseInt(linkClicks.value) : 0,
       landing_page_views: landingViews ? parseInt(landingViews.value) : 0,
       messages_started: msgStarts ? parseInt(msgStarts.value) : 0,
       video_views: videoViews ? parseInt(videoViews.value) : 0,
     },
-    campaigns,
-    daily,
+    campaigns, daily,
   }
 
   CACHE.set(cacheKey, { data: result, ts: Date.now() })

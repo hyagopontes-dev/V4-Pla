@@ -11,6 +11,7 @@ import OrganicView from './OrganicView'
 import ReferencesView from './ReferencesView'
 import ScopeView from './ScopeView'
 import PlannerView from './PlannerView'
+import SeasonalCalendar from './SeasonalCalendar'
 import type {
   Client, Deliverable, TrafficMetric, CommLog, Blocker,
   Highlight, OrganicAnalysis, MonthlyObjective, ClientReference,
@@ -120,7 +121,16 @@ export default function DashboardClient({
             )}
           </>
         )}
-        {tab === 'planner' && <PlannerView items={planner} />}
+        {tab === 'planner' && (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-2">
+              <PlannerView items={planner} />
+            </div>
+            <div>
+              <SeasonalCalendar />
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )

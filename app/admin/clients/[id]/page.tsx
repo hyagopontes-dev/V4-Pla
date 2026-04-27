@@ -15,6 +15,7 @@ import OrganicAnalysisManager from '@/components/admin/OrganicAnalysisManager'
 import ReferencesManager from '@/components/admin/ReferencesManager'
 import ContentPlannerManager from '@/components/admin/ContentPlannerManager'
 import AdsIntegrationManager from '@/components/admin/AdsIntegrationManager'
+import DeleteClientButton from '@/components/admin/DeleteClientButton'
 
 export default async function ClientDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -48,10 +49,13 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
         <Link href="/admin" className="flex items-center gap-1 text-gray-500 hover:text-gray-700 text-sm">
           <ArrowLeft size={14} /> Voltar
         </Link>
-        <Link href={`/dashboard?client=${client.slug}`} target="_blank"
-          className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 border border-gray-200 hover:border-gray-400 px-4 py-2 rounded-lg transition-colors">
-          <Eye size={15} /> Ver dashboard
-        </Link>
+        <div className="flex items-center gap-3">
+          <DeleteClientButton clientId={id} clientName={client.name} />
+          <Link href={`/dashboard?client=${client.slug}`} target="_blank"
+            className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 border border-gray-200 hover:border-gray-400 px-4 py-2 rounded-lg transition-colors">
+            <Eye size={15} /> Ver dashboard
+          </Link>
+        </div>
       </div>
       <div className="flex items-center justify-between mb-6">
         <div>
