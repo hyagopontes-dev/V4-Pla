@@ -1,87 +1,62 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-const CACHE = new Map<string, { data: any; ts: number }>()
-const TTL = 5 * 60 * 1000
+export const runtime = 'nodejs'
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
     const { access_token, account_id, date_preset } = body
 
-    // Debug: log what we received
-    console.log('[Google Ads] body keys:', Object.keys(body))
-    console.log('[Google Ads] access_token present:', !!access_token, 'length:', access_token?.length ?? 0)
-    console.log('[Google Ads] account_id:', account_id)
-    console.log('[Google Ads] devToken present:', !!process.env.GOOGLE_ADS_DEVELOPER_TOKEN)
+    console.log('[Google] token length:', access_token?.length ?? 0)
+    console.log('[Google] account_id:', account_id)
+    console.log('[Google] devToken exists:', !!process.env.GOOGLE_ADS_DEVELOPER_TOKEN)
 
     if (!access_token || !account_id) {
-      return NextResponse.json({ 
-        error: `Token ou Customer ID ausente. token=${!!access_token}(len=${access_token?.length ?? 0}), id=${account_id ?? 'undefined'}` 
+      return NextResponse.json({
+        error: `Dados ausentes: token=${!!access_token}, id=${!!account_id}`
       }, { status: 400 })
     }
 
     const devToken = process.env.GOOGLE_ADS_DEVELOPER_TOKEN
     if (!devToken) {
-      return NextResponse.json({ 
-        error: 'GOOGLE_ADS_DEVELOPER_TOKEN não configurado no servidor' 
+      return NextResponse.json({
+        error: 'GOOGLE_ADS_DEVELOPER_TOKEN não encontrado nas variáveis de ambiente'
       }, { status: 500 })
     }
 
     const cleanId = account_id.replace(/-/g, '')
-    const cacheKey = `google-${cleanId}-${date_preset}`
-    const cached = CACHE.get(cacheKey)
-    if (cached && Date.now() - cached.ts < TTL) return NextResponse.json(cached.data)
-
-    // Calcular datas baseado no preset
     const today = new Date()
-    let startDate: string
-    let endDate: string
-
-    const pad = (n: number) => String(n).padStart(2,'0')
+    const pad = (n: number) => String(n).padStart(2, '0')
     const fmt = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`
 
+    let startDate: string
+    let endDate = fmt(today)
+
     switch (date_preset) {
-      case 'today':
-        startDate = endDate = fmt(today)
-        break
-      case 'yesterday':
-        const yd = new Date(today); yd.setDate(yd.getDate()-1)
-        startDate = endDate = fmt(yd)
-        break
-      case 'last_7d':
-        const w = new Date(today); w.setDate(w.getDate()-7)
-        startDate = fmt(w); endDate = fmt(today)
-        break
-      case 'last_30d':
-        const m30 = new Date(today); m30.setDate(m30.getDate()-30)
-        startDate = fmt(m30); endDate = fmt(today)
-        break
-      case 'last_month':
-        const lm = new Date(today.getFullYear(), today.getMonth()-1, 1)
-        const lme = new Date(today.getFullYear(), today.getMonth(), 0)
-        startDate = fmt(lm); endDate = fmt(lme)
-        break
-      default: // this_month
+      case 'today': startDate = fmt(today); break
+      case 'yesterday': {
+        const d = new Date(today); d.setDate(d.getDate()-1)
+        startDate = endDate = fmt(d); break
+      }
+      case 'last_7d': {
+        const d = new Date(today); d.setDate(d.getDate()-7)
+        startDate = fmt(d); break
+      }
+      case 'last_30d': {
+        const d = new Date(today); d.setDate(d.getDate()-30)
+        startDate = fmt(d); break
+      }
+      case 'last_month': {
+        const s = new Date(today.getFullYear(), today.getMonth()-1, 1)
+        const e = new Date(today.getFullYear(), today.getMonth(), 0)
+        startDate = fmt(s); endDate = fmt(e); break
+      }
+      default:
         startDate = `${today.getFullYear()}-${pad(today.getMonth()+1)}-01`
-        endDate = fmt(today)
     }
 
-    const query = `
-      SELECT
-        metrics.cost_micros,
-        metrics.impressions,
-        metrics.clicks,
-        metrics.ctr,
-        metrics.average_cpm,
-        metrics.conversions,
-        metrics.cost_per_conversion,
-        metrics.all_conversions,
-        metrics.view_through_conversions
-      FROM customer
-      WHERE segments.date BETWEEN '${startDate}' AND '${endDate}'
-    `.trim()
+    const query = `SELECT metrics.cost_micros, metrics.impressions, metrics.clicks, metrics.ctr, metrics.average_cpm, metrics.conversions, metrics.cost_per_conversion FROM customer WHERE segments.date BETWEEN '${startDate}' AND '${endDate}'`
 
-    // Try v17 first, fallback to v16
     const headers: Record<string,string> = {
       'Authorization': `Bearer ${access_token}`,
       'developer-token': devToken,
@@ -89,79 +64,68 @@ export async function POST(request: NextRequest) {
       'login-customer-id': cleanId,
     }
 
-    let res = await fetch(
-      `https://googleads.googleapis.com/v17/customers/${cleanId}/googleAds:search`,
-      { method: 'POST', headers, body: JSON.stringify({ query }) }
-    )
+    console.log('[Google] calling API for customer:', cleanId, 'period:', startDate, '->', endDate)
 
-    // Fallback to v16 if v17 fails
-    if (res.status === 404) {
-      res = await fetch(
-        `https://googleads.googleapis.com/v16/customers/${cleanId}/googleAds:search`,
-        { method: 'POST', headers, body: JSON.stringify({ query }) }
-      )
+    // Try v17 then v16
+    for (const ver of ['v17', 'v16']) {
+      const url = `https://googleads.googleapis.com/${ver}/customers/${cleanId}/googleAds:search`
+      const res = await fetch(url, { method: 'POST', headers, body: JSON.stringify({ query }) })
+      const raw = await res.json()
+
+      console.log(`[Google] ${ver} status:`, res.status)
+      if (res.status === 404) continue
+
+      if (!res.ok) {
+        const errMsg = raw.error?.message
+          ?? raw.error?.details?.[0]?.errors?.[0]?.message
+          ?? raw.error?.details?.[0]?.errorCode
+          ?? JSON.stringify(raw).slice(0, 400)
+        console.log('[Google] error:', errMsg)
+        return NextResponse.json({ error: errMsg }, { status: res.status })
+      }
+
+      const rows = raw.results ?? []
+      let spend = 0, impressions = 0, clicks = 0, conversions = 0, ctr = 0, cpm = 0, n = 0
+
+      for (const row of rows) {
+        const m = row.metrics ?? {}
+        spend += (m.costMicros ?? 0) / 1_000_000
+        impressions += m.impressions ?? 0
+        clicks += m.clicks ?? 0
+        conversions += m.conversions ?? 0
+        ctr += (m.ctr ?? 0) * 100
+        cpm += (m.averageCpm ?? 0) / 1_000_000
+        n++
+      }
+
+      return NextResponse.json({
+        platform: 'google',
+        period: `${startDate} → ${endDate}`,
+        overview: {
+          spend,
+          impressions,
+          clicks,
+          ctr: n > 0 ? ctr / n : 0,
+          cpm: n > 0 ? cpm / n : 0,
+          reach: 0,
+          frequency: 0,
+          conversions: Math.round(conversions),
+          cpr: conversions > 0 ? spend / conversions : 0,
+          result_label: 'Conversões',
+          link_clicks: clicks,
+          landing_page_views: 0,
+          messages_started: 0,
+          video_views: 0,
+        },
+        campaigns: [],
+        daily: [],
+      })
     }
 
-    const raw = await res.json()
-    console.log('[Google Ads] response status:', res.status)
-    console.log('[Google Ads] response preview:', JSON.stringify(raw).slice(0,300))
+    return NextResponse.json({ error: 'Endpoint não encontrado nas versões v17 e v16' }, { status: 404 })
 
-    if (!res.ok) {
-      const errMsg = raw.error?.message ?? raw.error?.details?.[0]?.errors?.[0]?.message ?? JSON.stringify(raw).slice(0,300)
-      return NextResponse.json({ error: errMsg }, { status: res.status })
-    }
-
-    const rows = raw.results ?? []
-    if (!rows.length) {
-      return NextResponse.json({ error: 'Sem dados para este período' }, { status: 404 })
-    }
-
-    // Agregar todas as linhas
-    let totalCost = 0, totalImpressions = 0, totalClicks = 0
-    let totalConversions = 0, totalCostPerConv = 0
-    let totalCtr = 0, totalCpm = 0, count = 0
-
-    for (const row of rows) {
-      const m = row.metrics ?? {}
-      totalCost += (m.costMicros ?? 0) / 1_000_000
-      totalImpressions += m.impressions ?? 0
-      totalClicks += m.clicks ?? 0
-      totalConversions += m.conversions ?? 0
-      totalCtr += (m.ctr ?? 0) * 100
-      totalCpm += (m.averageCpm ?? 0) / 1_000_000
-      count++
-    }
-
-    const avgCtr = count > 0 ? totalCtr / count : 0
-    const avgCpm = count > 0 ? totalCpm / count : 0
-    const cpr = totalConversions > 0 ? totalCost / totalConversions : 0
-
-    const result = {
-      platform: 'google',
-      period: `${startDate} → ${endDate}`,
-      overview: {
-        spend: totalCost,
-        impressions: totalImpressions,
-        clicks: totalClicks,
-        ctr: avgCtr,
-        cpm: avgCpm,
-        reach: 0,
-        frequency: 0,
-        conversions: Math.round(totalConversions),
-        cpr,
-        result_label: 'Conversões',
-        link_clicks: totalClicks,
-        landing_page_views: 0,
-        messages_started: 0,
-        video_views: 0,
-      },
-      campaigns: [],
-      daily: [],
-    }
-
-    CACHE.set(cacheKey, { data: result, ts: Date.now() })
-    return NextResponse.json(result)
   } catch (e: any) {
-    return NextResponse.json({ error: e.message ?? 'Erro interno' }, { status: 500 })
+    console.log('[Google] caught error:', e?.message, e?.stack?.slice(0,300))
+    return NextResponse.json({ error: 'Erro interno: ' + (e?.message ?? 'desconhecido') }, { status: 500 })
   }
 }
