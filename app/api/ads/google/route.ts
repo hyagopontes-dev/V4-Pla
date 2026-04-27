@@ -8,9 +8,15 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const { access_token, account_id, date_preset } = body
 
+    // Debug: log what we received
+    console.log('[Google Ads] body keys:', Object.keys(body))
+    console.log('[Google Ads] access_token present:', !!access_token, 'length:', access_token?.length ?? 0)
+    console.log('[Google Ads] account_id:', account_id)
+    console.log('[Google Ads] devToken present:', !!process.env.GOOGLE_ADS_DEVELOPER_TOKEN)
+
     if (!access_token || !account_id) {
       return NextResponse.json({ 
-        error: `Token ou Customer ID ausente. Recebido: token=${!!access_token}, id=${!!account_id}` 
+        error: `Token ou Customer ID ausente. token=${!!access_token}(len=${access_token?.length ?? 0}), id=${account_id ?? 'undefined'}` 
       }, { status: 400 })
     }
 
