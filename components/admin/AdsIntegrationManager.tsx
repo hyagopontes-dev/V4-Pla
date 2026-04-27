@@ -14,6 +14,7 @@ export default function AdsIntegrationManager({ clientId, integrations: initial 
     return {
       access_token: existing?.access_token ?? '',
       account_id: existing?.account_id ?? '',
+      refresh_token: existing?.refresh_token ?? '',
       active: existing?.active ?? true,
       exists: !!existing,
     }
@@ -32,6 +33,7 @@ export default function AdsIntegrationManager({ clientId, integrations: initial 
       client_id: clientId, platform,
       access_token: data.access_token,
       account_id: data.account_id,
+      refresh_token: data.refresh_token || null,
       active: data.active,
       updated_at: new Date().toISOString(),
     }
@@ -49,7 +51,7 @@ export default function AdsIntegrationManager({ clientId, integrations: initial 
 
   const PlatformCard = ({
     platform, label, logo, state, setState, showToken, setShowToken,
-    tokenLabel, accountLabel, accountPlaceholder, helpUrl, helpText
+    tokenLabel, accountLabel, accountPlaceholder, helpUrl, helpText, extraField
   }: any) => (
     <div className="border border-gray-100 rounded-xl p-4 space-y-3">
       <div className="flex items-center justify-between">
@@ -100,6 +102,22 @@ export default function AdsIntegrationManager({ clientId, integrations: initial 
         </a>
       </div>
 
+      {extraField && (
+        <div>
+          <label className="label">{extraField.label}</label>
+          <input
+            className="input font-mono text-xs"
+            type="password"
+            placeholder={extraField.placeholder}
+            value={extraField.value}
+            onChange={e => extraField.onChange(e.target.value)}
+          />
+          <p className="text-xs text-gray-400 mt-1">
+            Com o refresh token o sistema renova o access token automaticamente quando expirar.
+          </p>
+        </div>
+      )}
+
       <button
         onClick={() => savePlatform(platform, state)}
         disabled={saving === platform}
@@ -141,6 +159,12 @@ export default function AdsIntegrationManager({ clientId, integrations: initial 
           accountPlaceholder="Ex: 123-456-7890"
           helpUrl="https://developers.google.com/oauthplayground"
           helpText="→ Gerar token no OAuth2 Playground"
+          extraField={{
+            label: 'Refresh Token (renovação automática)',
+            placeholder: 'Cole o refresh_token aqui...',
+            value: google.refresh_token,
+            onChange: (v: string) => setGoogle(g => ({ ...g, refresh_token: v }))
+          }}
         />
       </div>
     </div>

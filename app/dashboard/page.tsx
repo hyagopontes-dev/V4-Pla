@@ -30,7 +30,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
     supabase.from('monthly_objectives').select('*').eq('client_id', client.id).order('year', { ascending: false }).order('month', { ascending: false }),
     supabase.from('client_references').select('*').eq('client_id', client.id).order('type').order('name'),
     supabase.from('content_planner').select('*').eq('client_id', client.id).order('year', { ascending: false }).order('month', { ascending: false }),
-    supabase.from('ads_integrations').select('id,client_id,platform,access_token,account_id,active,updated_at').eq('client_id', client.id).eq('active', true),
+    supabase.from('ads_integrations').select('id,client_id,platform,access_token,account_id,refresh_token,active,updated_at').eq('client_id', client.id).eq('active', true),
   ])
 
   return (

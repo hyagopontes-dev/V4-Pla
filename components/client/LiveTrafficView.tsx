@@ -71,7 +71,13 @@ export default function LiveTrafficView({ integrations }: Props) {
       const res = await fetch(`/api/ads/${platform}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ access_token: int.access_token, account_id: int.account_id, date_preset: preset }),
+        body: JSON.stringify({
+          access_token: int.access_token,
+          account_id: int.account_id,
+          date_preset: preset,
+          refresh_token: (int as any).refresh_token ?? null,
+          client_id: int.client_id,
+        }),
       })
       const json = await res.json()
       if (!res.ok || json.error) throw new Error(json.error ?? 'Erro')
