@@ -81,23 +81,33 @@ export async function POST(request: NextRequest) {
       WHERE segments.date BETWEEN '${startDate}' AND '${endDate}'
     `.trim()
 
-    const res = await fetch(
-      `https://googleads.googleapis.com/v16/customers/${cleanId}/googleAds:search`,
-      {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${access_token}`,
-          'developer-token': devToken,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ query }),
-      }
+    // Try v17 first, fallback to v16
+    const headers: Record<string,string> = {
+      'Authorization': `Bearer ${access_token}`,
+      'developer-token': devToken,
+      'Content-Type': 'application/json',
+      'login-customer-id': cleanId,
+    }
+
+    let res = await fetch(
+      `https://googleads.googleapis.com/v17/customers/${cleanId}/googleAds:search`,
+      { method: 'POST', headers, body: JSON.stringify({ query }) }
     )
 
+    // Fallback to v16 if v17 fails
+    if (res.status === 404) {
+      res = await fetch(
+        `https://googleads.googleapis.com/v16/customers/${cleanId}/googleAds:search`,
+        { method: 'POST', headers, body: JSON.stringify({ query }) }
+      )
+    }
+
     const raw = await res.json()
+    console.log('[Google Ads] response status:', res.status)
+    console.log('[Google Ads] response preview:', JSON.stringify(raw).slice(0,300))
 
     if (!res.ok) {
-      const errMsg = raw.error?.message ?? raw.error?.status ?? JSON.stringify(raw).slice(0,200)
+      const errMsg = raw.error?.message ?? raw.error?.details?.[0]?.errors?.[0]?.message ?? JSON.stringify(raw).slice(0,300)
       return NextResponse.json({ error: errMsg }, { status: res.status })
     }
 
