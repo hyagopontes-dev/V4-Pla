@@ -15,6 +15,7 @@ import OrganicAnalysisManager from '@/components/admin/OrganicAnalysisManager'
 import ReferencesManager from '@/components/admin/ReferencesManager'
 import ContentPlannerManager from '@/components/admin/ContentPlannerManager'
 import AdsIntegrationManager from '@/components/admin/AdsIntegrationManager'
+import KickoffViewer from '@/components/admin/KickoffViewer'
 import DeleteClientButton from '@/components/admin/DeleteClientButton'
 
 export default async function ClientDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -41,6 +42,7 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
     supabase.from('client_references').select('*').eq('client_id', id).order('type').order('name'),
     supabase.from('content_planner').select('*').eq('client_id', id).order('year', { ascending: false }).order('month', { ascending: false }),
     supabase.from('ads_integrations').select('*').eq('client_id', id),
+    supabase.from('kickoff_responses').select('*').eq('client_id', id).single(),
   ])
 
   return (
@@ -76,6 +78,7 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
         <HighlightManager clientId={id} highlights={highlights ?? []} />
         <OrganicAnalysisManager clientId={id} analyses={organicAnalyses ?? []} />
         <ReferencesManager clientId={id} references={references ?? []} />
+        <KickoffViewer clientId={id} clientSlug={client.slug} response={kickoffResponse ?? null} />
         <ScopeManager client={client} monthlyObjectives={monthlyObjectives ?? []} />
         <UserManager clientId={id} clientSlug={client.slug} users={users ?? []} />
       </div>

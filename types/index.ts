@@ -134,3 +134,46 @@ export interface AdsMetrics {
   cpr: number
   reach?: number
 }
+
+export interface KickoffResponse {
+  id: string
+  client_id: string
+  submitted_at: string
+  alma_negocio?: string
+  comeco_tudo?: string
+  jeito_ser?: string
+  valores?: string
+  inspiracao?: string
+  o_que_vende?: string
+  cliente_ideal?: string
+  problema_resolve?: string
+  perguntas_frequentes?: string
+  quem_sao_concorrentes?: string
+  por_que_voce?: string
+  o_que_evitar?: string
+  fotos_videos?: string
+  quem_aprova?: string
+  o_que_ja_foi_feito?: string
+  sonho_curto_prazo?: string
+  o_que_medir?: string
+  dinheiro_anuncios?: string
+  faturamento_atual?: string
+  meta_faturamento?: string
+  ticket_medio?: string
+  produto_mais_vende?: string
+  produto_mais_lucro?: string
+  margem_lucro?: string
+  cac?: string
+  cpl?: string
+  taxa_conversao?: string
+  tempo_fechamento?: string
+  recorrencia?: string
+  investimento_marketing?: string
+  canal_principal?: string
+  principal_gargalo?: string
+  reunioes?: string
+  whatsapp?: string
+  contatos?: string
+  acessos?: string
+  materiais?: string
+}
