@@ -109,3 +109,28 @@ export interface ContentPlanner {
   created_at: string
   updated_at: string
 }
+
+export interface AdsIntegration {
+  id: string
+  client_id: string
+  platform: 'meta' | 'google'
+  access_token?: string
+  account_id?: string
+  refresh_token?: string
+  token_expires_at?: string
+  active: boolean
+  updated_at: string
+}
+
+export interface AdsMetrics {
+  platform: 'meta' | 'google'
+  period: string
+  spend: number
+  impressions: number
+  clicks: number
+  ctr: number
+  cpm: number
+  conversions: number
+  cpr: number
+  reach?: number
+}

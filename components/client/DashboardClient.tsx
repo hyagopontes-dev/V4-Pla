@@ -3,6 +3,7 @@ import { useState } from 'react'
 import DeliverableView from './DeliverableView'
 import OtherDeliverableView from './OtherDeliverableView'
 import TrafficView from './TrafficView'
+import LiveTrafficView from './LiveTrafficView'
 import BlockerView from './BlockerView'
 import HighlightView from './HighlightView'
 import CommLogView from './CommLogView'
@@ -13,7 +14,7 @@ import PlannerView from './PlannerView'
 import type {
   Client, Deliverable, TrafficMetric, CommLog, Blocker,
   Highlight, OrganicAnalysis, MonthlyObjective, ClientReference,
-  ContentPlanner, OtherDeliverable
+  ContentPlanner, OtherDeliverable, AdsIntegration
 } from '@/types'
 
 interface Props {
@@ -28,6 +29,7 @@ interface Props {
   monthlyObjectives: MonthlyObjective[]
   references: ClientReference[]
   planner: ContentPlanner[]
+  integrations: AdsIntegration[]
 }
 
 const TABS = [
@@ -38,9 +40,11 @@ const TABS = [
 
 export default function DashboardClient({
   client, deliverables, otherDeliverables, metrics, commLogs,
-  blockers, highlights, organicAnalyses, monthlyObjectives, references, planner
+  blockers, highlights, organicAnalyses, monthlyObjectives,
+  references, planner, integrations
 }: Props) {
   const [tab, setTab] = useState('entregas')
+  const hasLiveIntegrations = integrations.length > 0
 
   return (
     <div>
@@ -48,21 +52,14 @@ export default function DashboardClient({
       <div className="bg-black rounded-xl mb-6 overflow-hidden">
         <div className="p-6">
           <div className="flex items-center gap-5 flex-wrap">
-            {/* Logo */}
             <div className="w-16 h-16 rounded-xl border border-white/20 bg-white/5 flex items-center justify-center flex-shrink-0 overflow-hidden">
-              {client.logo_url ? (
-                <img src={client.logo_url} alt={client.name} className="w-full h-full object-contain p-1" />
-              ) : (
-                <span className="text-white font-bold text-2xl">{client.name.charAt(0)}</span>
-              )}
+              {client.logo_url
+                ? <img src={client.logo_url} alt={client.name} className="w-full h-full object-contain p-1" />
+                : <span className="text-white font-bold text-2xl">{client.name.charAt(0)}</span>}
             </div>
-
-            {/* Info */}
             <div className="flex-1 min-w-0">
               <h1 className="text-white text-2xl font-bold">{client.name}</h1>
-              {client.about && (
-                <p className="text-gray-400 text-sm mt-1 leading-relaxed max-w-2xl">{client.about}</p>
-              )}
+              {client.about && <p className="text-gray-400 text-sm mt-1 leading-relaxed max-w-2xl">{client.about}</p>}
               <div className="flex items-center gap-3 mt-2 flex-wrap">
                 <span className="text-xs bg-red-600/20 text-red-400 border border-red-600/30 px-2 py-0.5 rounded-full">
                   {client.contract_pieces} peças/mês
@@ -70,19 +67,20 @@ export default function DashboardClient({
                 <span className={`text-xs px-2 py-0.5 rounded-full ${client.active ? 'bg-green-600/20 text-green-400 border border-green-600/30' : 'bg-gray-600/20 text-gray-400 border border-gray-600/30'}`}>
                   {client.active ? 'Ativo' : 'Inativo'}
                 </span>
+                {hasLiveIntegrations && (
+                  <span className="text-xs bg-blue-600/20 text-blue-400 border border-blue-600/30 px-2 py-0.5 rounded-full flex items-center gap-1">
+                    ⚡ Dados em tempo real
+                  </span>
+                )}
               </div>
             </div>
           </div>
         </div>
-
-        {/* TABS */}
         <div className="flex border-t border-white/10">
           {TABS.map(t => (
             <button key={t.key} onClick={() => setTab(t.key)}
               className={`flex-1 py-3 text-sm font-medium transition-colors ${
-                tab === t.key
-                  ? 'text-red-400 border-b-2 border-red-500 bg-white/5'
-                  : 'text-gray-400 hover:text-white hover:bg-white/5'
+                tab === t.key ? 'text-red-400 border-b-2 border-red-500 bg-white/5' : 'text-gray-400 hover:text-white hover:bg-white/5'
               }`}>
               {t.label}
             </button>
@@ -105,11 +103,24 @@ export default function DashboardClient({
           </>
         )}
         {tab === 'resultados' && (
-          <TrafficView metrics={metrics} />
+          <>
+            {hasLiveIntegrations && <LiveTrafficView integrations={integrations} />}
+            {metrics.length > 0 && (
+              <div>
+                {hasLiveIntegrations && (
+                  <p className="text-xs text-gray-500 mb-3 px-1">Histórico manual cadastrado:</p>
+                )}
+                <TrafficView metrics={metrics} />
+              </div>
+            )}
+            {!hasLiveIntegrations && metrics.length === 0 && (
+              <div className="bg-black rounded-xl border border-white/10 p-10 text-center">
+                <p className="text-gray-500 text-sm">Nenhuma métrica de tráfego disponível ainda.</p>
+              </div>
+            )}
+          </>
         )}
-        {tab === 'planner' && (
-          <PlannerView items={planner} />
-        )}
+        {tab === 'planner' && <PlannerView items={planner} />}
       </div>
     </div>
   )

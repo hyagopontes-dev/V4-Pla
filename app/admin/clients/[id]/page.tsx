@@ -13,8 +13,8 @@ import BlockerManager from '@/components/admin/BlockerManager'
 import HighlightManager from '@/components/admin/HighlightManager'
 import OrganicAnalysisManager from '@/components/admin/OrganicAnalysisManager'
 import ReferencesManager from '@/components/admin/ReferencesManager'
-import InstagramManager from '@/components/admin/InstagramManager'
 import ContentPlannerManager from '@/components/admin/ContentPlannerManager'
+import AdsIntegrationManager from '@/components/admin/AdsIntegrationManager'
 
 export default async function ClientDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -23,20 +23,11 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
   if (!client) notFound()
 
   const [
-    { data: igProfile },
-    { data: deliverables },
-    { data: otherDeliverables },
-    { data: metrics },
-    { data: users },
-    { data: commLogs },
-    { data: blockers },
-    { data: highlights },
-    { data: organicAnalyses },
-    { data: monthlyObjectives },
-    { data: references },
-    { data: planner },
+    { data: deliverables }, { data: otherDeliverables }, { data: metrics },
+    { data: users }, { data: commLogs }, { data: blockers }, { data: highlights },
+    { data: organicAnalyses }, { data: monthlyObjectives }, { data: references },
+    { data: planner }, { data: integrations },
   ] = await Promise.all([
-    supabase.from('instagram_profile').select('*').eq('client_id', id).single(),
     supabase.from('deliverables').select('*').eq('client_id', id).order('year').order('month'),
     supabase.from('other_deliverables').select('*').eq('client_id', id).order('year', { ascending: false }).order('month', { ascending: false }),
     supabase.from('traffic_metrics').select('*').eq('client_id', id).order('year').order('month'),
@@ -48,6 +39,7 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
     supabase.from('monthly_objectives').select('*').eq('client_id', id).order('year', { ascending: false }).order('month', { ascending: false }),
     supabase.from('client_references').select('*').eq('client_id', id).order('type').order('name'),
     supabase.from('content_planner').select('*').eq('client_id', id).order('year', { ascending: false }).order('month', { ascending: false }),
+    supabase.from('ads_integrations').select('*').eq('client_id', id),
   ])
 
   return (
@@ -70,7 +62,7 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
       </div>
       <div className="space-y-6">
         <ClientEditForm client={client} />
-        <InstagramManager clientId={id} profile={igProfile ?? null} />
+        <AdsIntegrationManager clientId={id} integrations={integrations ?? []} />
         <DeliverableManager clientId={id} contractPieces={client.contract_pieces} deliverables={deliverables ?? []} />
         <OtherDeliverableManager clientId={id} items={otherDeliverables ?? []} />
         <ContentPlannerManager clientId={id} items={planner ?? []} />

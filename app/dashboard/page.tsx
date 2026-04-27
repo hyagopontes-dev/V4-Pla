@@ -15,16 +15,10 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   )
 
   const [
-    { data: deliverables },
-    { data: otherDeliverables },
-    { data: metrics },
-    { data: commLogs },
-    { data: blockers },
-    { data: highlights },
-    { data: organicAnalyses },
-    { data: monthlyObjectives },
-    { data: references },
-    { data: planner },
+    { data: deliverables }, { data: otherDeliverables }, { data: metrics },
+    { data: commLogs }, { data: blockers }, { data: highlights },
+    { data: organicAnalyses }, { data: monthlyObjectives }, { data: references },
+    { data: planner }, { data: integrations },
   ] = await Promise.all([
     supabase.from('deliverables').select('*').eq('client_id', client.id).order('year').order('month'),
     supabase.from('other_deliverables').select('*').eq('client_id', client.id).order('year', { ascending: false }).order('month', { ascending: false }),
@@ -36,6 +30,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
     supabase.from('monthly_objectives').select('*').eq('client_id', client.id).order('year', { ascending: false }).order('month', { ascending: false }),
     supabase.from('client_references').select('*').eq('client_id', client.id).order('type').order('name'),
     supabase.from('content_planner').select('*').eq('client_id', client.id).order('year', { ascending: false }).order('month', { ascending: false }),
+    supabase.from('ads_integrations').select('id,client_id,platform,access_token,account_id,active,updated_at').eq('client_id', client.id).eq('active', true),
   ])
 
   return (
@@ -51,6 +46,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
       monthlyObjectives={monthlyObjectives ?? []}
       references={references ?? []}
       planner={planner ?? []}
+      integrations={integrations ?? []}
     />
   )
 }
