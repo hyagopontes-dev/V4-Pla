@@ -70,9 +70,23 @@ export async function POST(request: NextRequest) {
     for (const ver of ['v17', 'v16']) {
       const url = `https://googleads.googleapis.com/${ver}/customers/${cleanId}/googleAds:search`
       const res = await fetch(url, { method: 'POST', headers, body: JSON.stringify({ query }) })
-      const raw = await res.json()
+      const text = await res.text()
+      
+      console.log(`[Google] ${ver} status:`, res.status, 'body preview:', text.slice(0, 200))
 
-      console.log(`[Google] ${ver} status:`, res.status)
+      // HTML response = token expirado ou URL errada
+      if (text.trim().startsWith('<')) {
+        if (res.status === 401 || text.includes('Sign in') || text.includes('accounts.google')) {
+          return NextResponse.json({ error: 'Token OAuth2 expirado. Gere um novo token em developers.google.com/oauthplayground e atualize nas Integrações do cliente.' }, { status: 401 })
+        }
+        return NextResponse.json({ error: `Resposta inválida do Google (status ${res.status}). Verifique o Customer ID e o token.` }, { status: 500 })
+      }
+
+      let raw: any
+      try { raw = JSON.parse(text) } catch { 
+        return NextResponse.json({ error: 'Resposta inválida do Google: ' + text.slice(0,100) }, { status: 500 })
+      }
+
       if (res.status === 404) continue
 
       if (!res.ok) {
