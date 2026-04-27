@@ -39,40 +39,52 @@ async function refreshAccessToken(refreshToken: string): Promise<string | null> 
 async function callGoogleAds(accessToken: string, customerId: string, devToken: string, startDate: string, endDate: string) {
   const query = `SELECT metrics.cost_micros, metrics.impressions, metrics.clicks, metrics.ctr, metrics.average_cpm, metrics.conversions, metrics.cost_per_conversion FROM customer WHERE segments.date BETWEEN '${startDate}' AND '${endDate}'`
 
-  const headers: Record<string, string> = {
-    'Authorization': `Bearer ${accessToken}`,
-    'developer-token': devToken,
-    'Content-Type': 'application/json',
-    'login-customer-id': customerId,
-  }
+  // Try different combinations of version and headers
+  const attempts = [
+    { ver: 'v17', withLogin: true },
+    { ver: 'v17', withLogin: false },
+    { ver: 'v16', withLogin: true },
+    { ver: 'v16', withLogin: false },
+    { ver: 'v15', withLogin: false },
+  ]
 
-  for (const ver of ['v17', 'v16']) {
+  for (const { ver, withLogin } of attempts) {
+    const headers: Record<string, string> = {
+      'Authorization': `Bearer ${accessToken}`,
+      'developer-token': devToken,
+      'Content-Type': 'application/json',
+    }
+    if (withLogin) headers['login-customer-id'] = customerId
+
     const url = `https://googleads.googleapis.com/${ver}/customers/${customerId}/googleAds:search`
+    console.log(`[Google] trying ${ver} withLogin=${withLogin} url=${url}`)
+
     const res = await fetch(url, { method: 'POST', headers, body: JSON.stringify({ query }) })
     const text = await res.text()
-    console.log(`[Google] ${ver} status:`, res.status)
+    console.log(`[Google] ${ver} status:`, res.status, 'html:', text.trim().startsWith('<'), 'preview:', text.slice(0,100))
 
-    if (text.trim().startsWith('<')) {
-      if (res.status === 404) continue
-      return { error: `Resposta inválida (status ${res.status})`, status: res.status }
-    }
+    if (text.trim().startsWith('<')) continue
 
     let raw: any
-    try { raw = JSON.parse(text) } catch {
-      return { error: 'Resposta inválida do Google', status: 500 }
-    }
+    try { raw = JSON.parse(text) } catch { continue }
 
     if (res.status === 401) return { error: 'TOKEN_EXPIRED', status: 401 }
+    if (res.status === 403) {
+      const msg = raw.error?.message ?? JSON.stringify(raw).slice(0,200)
+      return { error: msg, status: 403 }
+    }
     if (res.status === 404) continue
     if (!res.ok) {
       const errMsg = raw.error?.message ?? raw.error?.details?.[0]?.errors?.[0]?.message ?? JSON.stringify(raw).slice(0, 300)
+      console.log(`[Google] error from ${ver}:`, errMsg)
       return { error: errMsg, status: res.status }
     }
 
+    console.log(`[Google] SUCCESS with ${ver} withLogin=${withLogin}`)
     return { data: raw.results ?? [], status: 200 }
   }
 
-  return { error: 'Endpoint não encontrado (v17/v16)', status: 404 }
+  return { error: 'Endpoint não encontrado. Verifique se a Google Ads API está ativada no Google Cloud Console e se o Developer Token tem Standard Access.', status: 404 }
 }
 
 export async function POST(request: NextRequest) {
