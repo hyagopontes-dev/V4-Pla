@@ -28,7 +28,7 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
     { data: deliverables }, { data: otherDeliverables }, { data: metrics },
     { data: users }, { data: commLogs }, { data: blockers }, { data: highlights },
     { data: organicAnalyses }, { data: monthlyObjectives }, { data: references },
-    { data: planner }, { data: integrations },
+    { data: planner }, { data: integrations }, { data: kickoffResponse },
   ] = await Promise.all([
     supabase.from('deliverables').select('*').eq('client_id', id).order('year').order('month'),
     supabase.from('other_deliverables').select('*').eq('client_id', id).order('year', { ascending: false }).order('month', { ascending: false }),
