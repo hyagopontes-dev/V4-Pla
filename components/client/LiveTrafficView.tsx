@@ -225,14 +225,17 @@ export default function LiveTrafficView({ integrations }: Props) {
                       <th className="text-right px-4 py-3 text-xs text-gray-500 font-medium">Cliques</th>
                       <th className="text-right px-4 py-3 text-xs text-gray-500 font-medium">CTR</th>
                       <th className="text-right px-4 py-3 text-xs text-gray-500 font-medium">CPM</th>
-                      <th className="text-right px-4 py-3 text-xs text-gray-500 font-medium">Conv.</th>
-                      <th className="text-right px-5 py-3 text-xs text-gray-500 font-medium">CPR</th>
+                      <th className="text-right px-4 py-3 text-xs text-gray-500 font-medium">Resultado</th>
+                      <th className="text-right px-5 py-3 text-xs text-gray-500 font-medium">Custo/resultado</th>
                     </tr>
                   </thead>
                   <tbody>
                     {campaigns.map((c: any, i: number) => (
                       <tr key={i} className="border-b border-white/5 hover:bg-white/5 transition-colors">
-                        <td className="px-5 py-3 text-white text-xs font-medium max-w-[200px] truncate">{c.name}</td>
+                        <td className="px-5 py-3 max-w-[200px]">
+                          <p className="text-white text-xs font-medium truncate">{c.name}</p>
+                          {c.result_label && <p className="text-gray-600 text-xs mt-0.5">{c.result_label}</p>}
+                        </td>
                         <td className="px-4 py-3 text-right text-red-400 text-xs font-semibold">{fBRL(c.spend)}</td>
                         <td className="px-4 py-3 text-right text-gray-300 text-xs">{fNum(c.reach)}</td>
                         <td className="px-4 py-3 text-right text-gray-300 text-xs">{fNum(c.impressions)}</td>
@@ -240,11 +243,15 @@ export default function LiveTrafficView({ integrations }: Props) {
                         <td className="px-4 py-3 text-right text-gray-300 text-xs">{fPct(c.ctr)}</td>
                         <td className="px-4 py-3 text-right text-gray-300 text-xs">{fBRL(c.cpm)}</td>
                         <td className="px-4 py-3 text-right text-xs">
-                          <span className={c.conversions > 0 ? 'text-green-400 font-semibold' : 'text-gray-600'}>
-                            {c.conversions}
+                          <span className={c.result_value > 0 ? 'text-green-400 font-bold' : 'text-gray-600'}>
+                            {c.result_value > 0 ? fNum(c.result_value) : '—'}
                           </span>
                         </td>
-                        <td className="px-5 py-3 text-right text-gray-300 text-xs">{c.cpr > 0 ? fBRL(c.cpr) : '—'}</td>
+                        <td className="px-5 py-3 text-right text-xs">
+                          {c.result_cost > 0 ? (
+                            <span className="text-gray-300" title={c.result_cost_label}>{fBRL(c.result_cost)}</span>
+                          ) : <span className="text-gray-600">—</span>}
+                        </td>
                       </tr>
                     ))}
                   </tbody>
