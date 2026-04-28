@@ -2,7 +2,7 @@
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase'
 import { KickoffResponse } from '@/types'
-import { ExternalLink, Trash2, ClipboardList, Copy, Check } from 'lucide-react'
+import { ExternalLink, Trash2, ClipboardList, Copy, Check, Download } from 'lucide-react'
 
 interface Props { clientId: string; clientSlug: string; response: KickoffResponse | null }
 
@@ -35,6 +35,7 @@ export default function KickoffViewer({ clientId, clientSlug, response: initial 
   const [response, setResponse] = useState(initial)
   const [deleting, setDeleting] = useState(false)
   const [copied, setCopied] = useState(false)
+  const [exporting, setExporting] = useState(false)
   const supabase = createClient()
   const kickoffUrl = `${typeof window !== 'undefined' ? window.location.origin : ''}/kickoff?client=${clientSlug}`
 
@@ -44,6 +45,19 @@ export default function KickoffViewer({ clientId, clientSlug, response: initial 
     await supabase.from('kickoff_responses').delete().eq('client_id', clientId)
     setResponse(null)
     setDeleting(false)
+  }
+
+  async function exportPDF() {
+    setExporting(true)
+    const url = `/api/kickoff-pdf?client_id=${clientId}`
+    const win = window.open(url, '_blank')
+    if (win) {
+      // Wait for page to load then trigger print dialog (which allows save as PDF)
+      setTimeout(() => {
+        try { win.print() } catch {}
+      }, 1500)
+    }
+    setExporting(false)
   }
 
   async function copyLink() {
@@ -74,6 +88,12 @@ export default function KickoffViewer({ clientId, clientSlug, response: initial 
             className="flex items-center gap-1.5 text-xs bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded-lg transition-colors">
             <ExternalLink size={12} /> Abrir formulário
           </a>
+          {response && (
+            <button onClick={exportPDF} disabled={exporting}
+              className="flex items-center gap-1.5 text-xs bg-gray-900 hover:bg-gray-700 text-white border border-white/10 px-3 py-1.5 rounded-lg transition-colors disabled:opacity-60">
+              <Download size={12} /> {exporting ? 'Gerando...' : 'Exportar PDF'}
+            </button>
+          )}
           {response && (
             <button onClick={handleDelete} disabled={deleting}
               className="flex items-center gap-1.5 text-xs text-red-400 hover:text-red-600 border border-red-200 hover:border-red-400 px-3 py-1.5 rounded-lg transition-colors disabled:opacity-60">
