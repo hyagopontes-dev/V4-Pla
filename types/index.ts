@@ -186,6 +186,8 @@ export interface ClientHandoff {
   promessa_feita?: string
   prazo_acordado?: string
   perfil_cliente?: string
+  link_reuniao?: string
+  transcricao_reuniao?: string
   created_at: string
   updated_at: string
 }

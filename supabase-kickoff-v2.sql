@@ -25,3 +25,7 @@ create table if not exists public.client_handoff (
   updated_at timestamptz default now()
 );
 alter table public.client_handoff disable row level security;
+
+alter table public.client_handoff
+  add column if not exists link_reuniao text,
+  add column if not exists transcricao_reuniao text;

@@ -12,6 +12,8 @@ const FIELDS = [
   { key: 'promessa_feita', label: 'Promessa feita', placeholder: 'O que foi prometido ao cliente durante a venda...' },
   { key: 'prazo_acordado', label: 'Prazo acordado', placeholder: 'Prazos e datas combinados...' },
   { key: 'perfil_cliente', label: 'Perfil do cliente', placeholder: 'Perfil comportamental, expectativas, nível de exigência...' },
+  { key: 'link_reuniao', label: 'Link da reunião de vendas', placeholder: 'https://...', isUrl: true },
+  { key: 'transcricao_reuniao', label: 'Transcrição da reunião de vendas', placeholder: 'Cole aqui a transcrição ou resumo da reunião...' },
 ]
 
 export default function HandoffManager({ clientId, handoff: initial }: Props) {
@@ -22,6 +24,8 @@ export default function HandoffManager({ clientId, handoff: initial }: Props) {
     promessa_feita: initial?.promessa_feita ?? '',
     prazo_acordado: initial?.prazo_acordado ?? '',
     perfil_cliente: initial?.perfil_cliente ?? '',
+    link_reuniao: initial?.link_reuniao ?? '',
+    transcricao_reuniao: initial?.transcricao_reuniao ?? '',
   })
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
@@ -65,13 +69,24 @@ export default function HandoffManager({ clientId, handoff: initial }: Props) {
           </p>
           {FIELDS.map(field => (
             <div key={field.key}>
-              <label className="label">{field.label} <span className="text-red-500">*</span></label>
-              <textarea
-                className="input min-h-[90px] resize-y"
-                placeholder={field.placeholder}
-                value={form[field.key]}
-                onChange={e => setForm(f => ({ ...f, [field.key]: e.target.value }))}
-              />
+              <label className="label">{field.label} {!field.isUrl && <span className="text-red-500">*</span>}</label>
+              {field.isUrl ? (
+                <input
+                  className="input"
+                  type="url"
+                  placeholder={field.placeholder}
+                  value={form[field.key] ?? ''}
+                  onChange={e => setForm(f => ({ ...f, [field.key]: e.target.value }))}
+                />
+              ) : (
+                <textarea
+                  className="input resize-y"
+                  style={{ minHeight: field.key === 'transcricao_reuniao' ? '160px' : '90px' }}
+                  placeholder={field.placeholder}
+                  value={form[field.key] ?? ''}
+                  onChange={e => setForm(f => ({ ...f, [field.key]: e.target.value }))}
+                />
+              )}
             </div>
           ))}
           <button onClick={save} disabled={saving}
