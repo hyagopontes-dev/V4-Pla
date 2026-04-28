@@ -16,6 +16,7 @@ import ReferencesManager from '@/components/admin/ReferencesManager'
 import ContentPlannerManager from '@/components/admin/ContentPlannerManager'
 import AdsIntegrationManager from '@/components/admin/AdsIntegrationManager'
 import KickoffViewer from '@/components/admin/KickoffViewer'
+import HandoffManager from '@/components/admin/HandoffManager'
 import DeleteClientButton from '@/components/admin/DeleteClientButton'
 
 export default async function ClientDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -43,6 +44,7 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
     supabase.from('content_planner').select('*').eq('client_id', id).order('year', { ascending: false }).order('month', { ascending: false }),
     supabase.from('ads_integrations').select('*').eq('client_id', id),
     supabase.from('kickoff_responses').select('*').eq('client_id', id).single(),
+    supabase.from('client_handoff').select('*').eq('client_id', id).single(),
   ])
 
   return (
@@ -68,6 +70,7 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
       </div>
       <div className="space-y-6">
         <ClientEditForm client={client} />
+        <HandoffManager clientId={id} handoff={handoff ?? null} />
         <AdsIntegrationManager clientId={id} integrations={integrations ?? []} />
         <DeliverableManager clientId={id} contractPieces={client.contract_pieces} deliverables={deliverables ?? []} />
         <OtherDeliverableManager clientId={id} items={otherDeliverables ?? []} />

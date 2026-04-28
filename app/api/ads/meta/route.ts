@@ -64,12 +64,27 @@ function getBestResult(objective: string, actions: any[], costPerActions: any[])
     }
   }
 
-  // Fallback: pega o action com maior valor que não seja reach/impression
-  const SKIP = ['reach','impression','frequency']
+  // Fallback: prefer conversion-type actions over engagement/video
+  const PREFER = ['lead','purchase','complete_registration','omni_purchase','omni_initiated_checkout','landing_page_view','link_click','onsite_conversion.messaging_conversation_started_7d']
+  const SKIP_FALLBACK = ['reach','impression','frequency','post_reaction','onsite_conversion.post_save','onsite_conversion.post_share']
+
+  // Try preferred types first
+  for (const type of PREFER) {
+    const action = actions.find((a: any) => a.action_type === type)
+    if (action && parseInt(action.value ?? '0') > 0) {
+      const costAction = costPerActions.find((a: any) => a.action_type === type)
+      return {
+        value: parseInt(action.value),
+        label: ACTION_LABELS[type] ?? type,
+        cost: costAction ? parseFloat(costAction.value) : 0,
+      }
+    }
+  }
+
   let best: any = null
   let bestVal = 0
   for (const action of actions) {
-    if (SKIP.some(s => action.action_type.includes(s))) continue
+    if (SKIP_FALLBACK.some(s => action.action_type.includes(s))) continue
     const val = parseInt(action.value ?? '0')
     if (val > bestVal) { bestVal = val; best = action }
   }

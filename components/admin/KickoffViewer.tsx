@@ -7,35 +7,27 @@ import { ExternalLink, Trash2, ClipboardList, Copy, Check } from 'lucide-react'
 interface Props { clientId: string; clientSlug: string; response: KickoffResponse | null }
 
 const SECTIONS = [
-  { title: 'Empresa e Marca', emoji: '🏢', fields: [
-    ['alma_negocio','A alma do negócio'],['comeco_tudo','O começo de tudo'],
-    ['jeito_ser','Jeito de ser'],['valores','Valores'],['inspiracao','Inspiração'],
+  { title: 'Sobre a Empresa', emoji: '🏢', fields: [
+    ['sobre_empresa','Sobre a empresa'],['alma_negocio','Frase curta'],
+    ['comeco_tudo','Por que criou o negócio'],['valores','Valores / proibições'],['inspiracao','Inspiração'],
   ]},
-  { title: 'Produto e Clientes', emoji: '🛍️', fields: [
-    ['o_que_vende','O que vende'],['cliente_ideal','Cliente ideal'],
-    ['problema_resolve','Problema que resolve'],['perguntas_frequentes','Perguntas frequentes'],
+  { title: 'Análise S.W.O.T', emoji: '📊', fields: [
+    ['swot_forcas','Forças'],['swot_fraquezas','Fraquezas'],
+    ['swot_oportunidades','Oportunidades'],['swot_ameacas','Ameaças'],
   ]},
-  { title: 'Concorrência', emoji: '🏆', fields: [
+  { title: 'Clientes e Públicos', emoji: '👥', fields: [
+    ['cliente_ideal','Cliente ideal'],['problema_resolve','Problema que resolve'],
+    ['publico_1','Público 1'],['publico_2','Público 2'],['publico_3','Público 3'],
+  ]},
+  { title: 'Diferenciais e Concorrência', emoji: '🏆', fields: [
+    ['puv','PUV — Proposta Única de Valor'],['perguntas_frequentes','Perguntas frequentes'],
     ['quem_sao_concorrentes','Concorrentes'],['por_que_voce','Por que você'],['o_que_evitar','O que evitar'],
   ]},
-  { title: 'Produção de Conteúdo', emoji: '🎬', fields: [
+  { title: 'Produção e Conteúdo', emoji: '🎬', fields: [
     ['fotos_videos','Fotos e vídeos'],['quem_aprova','Quem aprova'],['o_que_ja_foi_feito','O que já foi feito'],
   ]},
-  { title: 'Objetivos', emoji: '🎯', fields: [
-    ['sonho_curto_prazo','Sonho de curto prazo'],['o_que_medir','O que medir'],['dinheiro_anuncios','Verba para anúncios'],
-  ]},
-  { title: 'Métricas e Financeiro', emoji: '💰', fields: [
-    ['faturamento_atual','Faturamento atual'],['meta_faturamento','Meta de faturamento'],
-    ['ticket_medio','Ticket médio'],['produto_mais_vende','Produto que mais vende'],
-    ['produto_mais_lucro','Produto mais lucrativo'],['margem_lucro','Margem de lucro'],
-    ['cac','CAC'],['cpl','CPL'],['taxa_conversao','Taxa de conversão'],
-    ['tempo_fechamento','Tempo de fechamento'],['recorrencia','Recorrência'],
-    ['investimento_marketing','Investimento em marketing'],['canal_principal','Canal principal'],
-    ['principal_gargalo','Principal gargalo'],
-  ]},
-  { title: 'Combinados e Acessos', emoji: '🤝', fields: [
-    ['reunioes','Reuniões'],['whatsapp','WhatsApp'],['contatos','Contatos'],
-    ['acessos','Acessos'],['materiais','Materiais'],
+  { title: 'Objetivos e Combinados', emoji: '🎯', fields: [
+    ['objetivo_v4','Objetivo com a v4'],['sonho_curto_prazo','Sonho de curto prazo'],['reuniao_horario','Dia e horário das reuniões'],
   ]},
 ]
 

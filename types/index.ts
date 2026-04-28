@@ -177,3 +177,15 @@ export interface KickoffResponse {
   acessos?: string
   materiais?: string
 }
+
+export interface ClientHandoff {
+  id: string
+  client_id: string
+  o_que_foi_vendido?: string
+  expectativa_cliente?: string
+  promessa_feita?: string
+  prazo_acordado?: string
+  perfil_cliente?: string
+  created_at: string
+  updated_at: string
+}
