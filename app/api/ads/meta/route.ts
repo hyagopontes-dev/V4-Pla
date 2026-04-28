@@ -31,6 +31,12 @@ const OBJECTIVE_PRIORITY: Record<string, string[]> = {
   VIDEO_VIEWS: ['thruplay','video_view'],
 }
 
+// Objectives that should NOT use fallback (no meaningful result to show)
+const NO_FALLBACK_OBJECTIVES = new Set([
+  'OUTCOME_AWARENESS', 'REACH', 'POST_ENGAGEMENT', 'PAGE_LIKES',
+  'OUTCOME_ENGAGEMENT', 'VIDEO_VIEWS',
+])
+
 function getBestResult(objective: string, actions: any[], costPerActions: any[]) {
   const priority = OBJECTIVE_PRIORITY[objective] ?? []
   for (const type of priority) {
@@ -40,7 +46,12 @@ function getBestResult(objective: string, actions: any[], costPerActions: any[])
       return { value: parseInt(action.value), label: ACTION_LABELS[type] ?? type, cost: costAction ? parseFloat(costAction.value) : 0 }
     }
   }
-  const PREFER = ['lead','purchase','omni_purchase','onsite_conversion.messaging_conversation_started_7d','landing_page_view','link_click']
+  // No fallback for awareness/engagement objectives — show "—" like Meta does
+  if (NO_FALLBACK_OBJECTIVES.has(objective)) {
+    return { value: 0, label: '—', cost: 0 }
+  }
+  // For conversion/lead/traffic objectives, try fallback
+  const PREFER = ['lead','onsite_conversion.lead_grouped','purchase','omni_purchase','onsite_conversion.messaging_conversation_started_7d','landing_page_view','link_click']
   for (const type of PREFER) {
     const action = actions.find((a: any) => a.action_type === type)
     if (action && parseInt(action.value ?? '0') > 0) {
@@ -48,7 +59,7 @@ function getBestResult(objective: string, actions: any[], costPerActions: any[])
       return { value: parseInt(action.value), label: ACTION_LABELS[type] ?? type, cost: costAction ? parseFloat(costAction.value) : 0 }
     }
   }
-  return { value: 0, label: 'Resultados', cost: 0 }
+  return { value: 0, label: '—', cost: 0 }
 }
 
 function getActionValue(actions: any[], type: string): number {
@@ -173,7 +184,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Token ou Account ID ausente' }, { status: 400 })
 
   const cleanId = account_id.replace('act_', '')
-  const cacheKey = `meta-v7-${cleanId}-${date_preset}-${filter_campaign_id ?? ''}-${filter_adset_id ?? ''}-${dashboard_type}`
+  const cacheKey = `meta-v8-${cleanId}-${date_preset}-${filter_campaign_id ?? ''}-${filter_adset_id ?? ''}-${dashboard_type}`
   const cached = CACHE.get(cacheKey)
   if (cached && Date.now() - cached.ts < TTL) return NextResponse.json(cached.data)
 
