@@ -120,7 +120,15 @@ const PHASES = [
     id: 8, key: 'p7', emoji: '🎨', icon: Palette, color: 'from-pink-600 to-pink-700',
     title: 'Identidade Visual', subtitle: 'Assets e materiais da marca',
     description: 'Verificar disponibilidade de todos os materiais visuais necessários.',
-    fields: [],
+    fields: [
+      { key: 'link_logo', label: '🔗 Link da Logo', placeholder: 'https://drive.google.com/...' },
+      { key: 'link_manual', label: '🔗 Link do Manual da Marca', placeholder: 'https://...' },
+      { key: 'link_criativos', label: '🔗 Link dos Criativos', placeholder: 'https://drive.google.com/...' },
+      { key: 'link_videos', label: '🔗 Link dos Vídeos', placeholder: 'https://...' },
+      { key: 'link_fotos', label: '🔗 Link das Fotos', placeholder: 'https://drive.google.com/...' },
+      { key: 'link_materiais', label: '🔗 Link dos Materiais Institucionais', placeholder: 'https://...' },
+      { key: 'observacoes_vi', label: '📝 Observações', placeholder: 'Paleta de cores, fontes utilizadas, orientações...' },
+    ],
     checks: [
       { key: 'logo', label: 'Logo (PNG/SVG em fundo transparente)' },
       { key: 'manual', label: 'Manual da marca / brand book' },
@@ -454,17 +462,40 @@ export default function StrategicPlanning({ clients, selectedClientId, selectedC
                   )}
 
                   {/* Text fields */}
-                  {phase.fields.map(field => (
-                    <div key={field.key}>
-                      <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1.5">{field.label}</label>
-                      <textarea
-                        className="w-full bg-gray-800 border border-white/10 text-white text-sm rounded-xl px-4 py-3 focus:outline-none focus:border-red-500 resize-none min-h-[80px]"
-                        placeholder={field.placeholder}
-                        value={form[`${prefix}${field.key}`] ?? ''}
-                        onChange={e => set(`${prefix}${field.key}`, e.target.value)}
-                      />
-                    </div>
-                  ))}
+                  {phase.fields.map(field => {
+                    const isUrl = field.key.startsWith('link_')
+                    const val = form[`${prefix}${field.key}`] ?? ''
+                    return (
+                      <div key={field.key}>
+                        <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1.5">{field.label}</label>
+                        {isUrl ? (
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="url"
+                              className="flex-1 bg-gray-800 border border-white/10 text-white text-sm rounded-xl px-4 py-3 focus:outline-none focus:border-red-500"
+                              placeholder={field.placeholder}
+                              value={val}
+                              onChange={e => set(`${prefix}${field.key}`, e.target.value)}
+                            />
+                            {val && (
+                              <a href={val} target="_blank" rel="noopener"
+                                className="flex-shrink-0 flex items-center gap-1.5 text-xs bg-gray-700 hover:bg-gray-600 text-white px-3 py-3 rounded-xl transition-colors">
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                                Abrir
+                              </a>
+                            )}
+                          </div>
+                        ) : (
+                          <textarea
+                            className="w-full bg-gray-800 border border-white/10 text-white text-sm rounded-xl px-4 py-3 focus:outline-none focus:border-red-500 resize-none min-h-[80px]"
+                            placeholder={field.placeholder}
+                            value={val}
+                            onChange={e => set(`${prefix}${field.key}`, e.target.value)}
+                          />
+                        )}
+                      </div>
+                    )
+                  })}
 
                   {/* Meta fields */}
                   <div className="grid grid-cols-3 gap-3 pt-3 border-t border-white/10">

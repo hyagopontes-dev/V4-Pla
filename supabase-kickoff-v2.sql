@@ -136,3 +136,12 @@ alter table public.strategic_planning
   -- Rename market analysis fields for p2 (new fields)
   add column if not exists p2_reputacao text,
   add column if not exists p2_processo_comercial text;
+
+alter table public.strategic_planning
+  add column if not exists p7_link_logo text,
+  add column if not exists p7_link_manual text,
+  add column if not exists p7_link_criativos text,
+  add column if not exists p7_link_videos text,
+  add column if not exists p7_link_fotos text,
+  add column if not exists p7_link_materiais text,
+  add column if not exists p7_observacoes_vi text;
