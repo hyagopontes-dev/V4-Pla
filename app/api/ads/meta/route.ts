@@ -14,7 +14,9 @@ const ACTION_LABELS: Record<string, string> = {
   'link_click': 'Cliques no link',
   'landing_page_view': 'Views de landing page',
   'onsite_conversion.messaging_conversation_started_7d': 'Conversas iniciadas',
-  'onsite_conversion.messaging_first_reply': 'Respostas',
+  'onsite_conversion.messaging_first_reply': 'Respostas no chat',
+  'onsite_conversion.messaging_welcome_message_view': 'Mensagens abertas',
+  'onsite_conversion.messaging_user_depth_2_message_send': 'Conversas aprofundadas',
   'post_engagement': 'Engajamentos',
   'page_engagement': 'Engajamentos',
   'video_view': 'Views de vídeo',
@@ -40,7 +42,16 @@ const OBJECTIVE_PRIORITY: Record<string, string[]> = {
   OUTCOME_AWARENESS: ['video_view','thruplay','reach'],
   LEAD_GENERATION: ['lead','onsite_conversion.lead_grouped'],
   CONVERSIONS: ['purchase','offsite_conversion.fb_pixel_purchase','lead','omni_purchase'],
-  MESSAGES: ['onsite_conversion.messaging_conversation_started_7d','onsite_conversion.messaging_first_reply'],
+  MESSAGES: [
+    'onsite_conversion.messaging_conversation_started_7d',
+    'onsite_conversion.messaging_first_reply',
+    'onsite_conversion.messaging_welcome_message_view',
+    'onsite_conversion.messaging_user_depth_2_message_send',
+  ],
+  OUTCOME_ENGAGEMENT_MESSAGING: [
+    'onsite_conversion.messaging_conversation_started_7d',
+    'onsite_conversion.messaging_first_reply',
+  ],
   LINK_CLICKS: ['landing_page_view','link_click'],
   POST_ENGAGEMENT: ['post_engagement','video_view'],
   VIDEO_VIEWS: ['thruplay','video_view'],
@@ -65,7 +76,12 @@ function getBestResult(objective: string, actions: any[], costPerActions: any[])
   }
 
   // Fallback: prefer conversion-type actions over engagement/video
-  const PREFER = ['lead','purchase','complete_registration','omni_purchase','omni_initiated_checkout','landing_page_view','link_click','onsite_conversion.messaging_conversation_started_7d']
+  const PREFER = [
+    'lead','purchase','complete_registration','omni_purchase','omni_initiated_checkout',
+    'onsite_conversion.messaging_conversation_started_7d',
+    'onsite_conversion.messaging_first_reply',
+    'landing_page_view','link_click',
+  ]
   const SKIP_FALLBACK = ['reach','impression','frequency','post_reaction','onsite_conversion.post_save','onsite_conversion.post_share']
 
   // Try preferred types first
@@ -107,7 +123,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Token ou Account ID ausente' }, { status: 400 })
 
   const cleanId = account_id.replace('act_', '')
-  const cacheKey = `meta-${cleanId}-${date_preset}`
+  const cacheKey = `meta-v2-${cleanId}-${date_preset}`
   const cached = CACHE.get(cacheKey)
   if (cached && Date.now() - cached.ts < TTL) return NextResponse.json(cached.data)
 
