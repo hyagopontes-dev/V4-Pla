@@ -15,6 +15,7 @@ export default function ClientEditForm({ client }: Props) {
     active: client.active,
     logo_url: client.logo_url ?? '',
     about: client.about ?? '',
+    dashboard_type: client.dashboard_type ?? 'inside_sales',
   })
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
@@ -60,6 +61,7 @@ export default function ClientEditForm({ client }: Props) {
       active: form.active,
       logo_url: form.logo_url || null,
       about: form.about || null,
+      dashboard_type: form.dashboard_type,
     }).eq('id', client.id)
     setSaving(false)
     setSaved(true)
@@ -136,6 +138,16 @@ export default function ClientEditForm({ client }: Props) {
               <p className="text-xs text-gray-400">PNG, JPG, SVG ou WebP. Fundo transparente recomendado.</p>
             </div>
           </div>
+        </div>
+
+        <div>
+          <label className="label">Tipo de Dashboard</label>
+          <select className="input" value={form.dashboard_type}
+            onChange={e => setForm(f => ({ ...f, dashboard_type: e.target.value }))}>
+            <option value="inside_sales">📞 Inside Sales — Foco em Leads</option>
+            <option value="ecommerce">📊 E-commerce — Foco em Vendas/ROAS</option>
+          </select>
+          <p className="text-xs text-gray-400 mt-1">Define quais métricas são exibidas na aba Resultados do cliente.</p>
         </div>
 
         <div>

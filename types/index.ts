@@ -7,7 +7,7 @@ export interface Profile {
 export interface Client {
   id: string; name: string; slug: string; logo_url?: string; about?: string
   contract_pieces: number; active: boolean
-  scope_description?: string; monthly_objectives?: string; created_at: string
+  scope_description?: string; monthly_objectives?: string; dashboard_type?: string; created_at: string
 }
 
 export interface Deliverable {

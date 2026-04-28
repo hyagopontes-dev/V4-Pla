@@ -105,7 +105,7 @@ export default function DashboardClient({
         )}
         {tab === 'resultados' && (
           <>
-            {hasLiveIntegrations && <LiveTrafficView integrations={integrations} />}
+            {hasLiveIntegrations && <LiveTrafficView integrations={integrations} dashboardType={client.dashboard_type ?? 'inside_sales'} />}
             {metrics.length > 0 && (
               <div>
                 {hasLiveIntegrations && (

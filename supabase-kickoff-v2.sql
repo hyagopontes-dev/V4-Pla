@@ -29,3 +29,8 @@ alter table public.client_handoff disable row level security;
 alter table public.client_handoff
   add column if not exists link_reuniao text,
   add column if not exists transcricao_reuniao text;
+
+-- Dashboard template per client
+alter table public.clients
+  add column if not exists dashboard_type text default 'inside_sales' 
+  check (dashboard_type in ('ecommerce', 'inside_sales'));
