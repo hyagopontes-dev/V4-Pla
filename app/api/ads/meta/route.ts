@@ -86,11 +86,40 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Token ou Account ID ausente' }, { status: 400 })
 
   const cleanId = account_id.replace('act_', '')
-  const cacheKey = `meta-v3-${cleanId}-${date_preset}-${filter_campaign_id ?? ''}-${filter_adset_id ?? ''}`
+  const cacheKey = `meta-v4-${cleanId}-${date_preset}-${filter_campaign_id ?? ''}-${filter_adset_id ?? ''}`
   const cached = CACHE.get(cacheKey)
   if (cached && Date.now() - cached.ts < TTL) return NextResponse.json(cached.data)
 
-  const baseParams: Record<string,string> = { access_token, date_preset: date_preset ?? 'this_month' }
+  // Convert custom presets to time_range for Meta API
+  const today = new Date()
+  const pad = (n: number) => String(n).padStart(2,'0')
+  const fmt = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`
+  
+  let metaDatePreset: string | null = null
+  let metaTimeRange: { since: string; until: string } | null = null
+
+  if (date_preset === 'this_week') {
+    const day = today.getDay() // 0=sun
+    const monday = new Date(today); monday.setDate(today.getDate() - (day === 0 ? 6 : day - 1))
+    metaTimeRange = { since: fmt(monday), until: fmt(today) }
+  } else if (date_preset === 'last_week') {
+    const day = today.getDay()
+    const lastMonday = new Date(today); lastMonday.setDate(today.getDate() - (day === 0 ? 6 : day - 1) - 7)
+    const lastSunday = new Date(lastMonday); lastSunday.setDate(lastMonday.getDate() + 6)
+    metaTimeRange = { since: fmt(lastMonday), until: fmt(lastSunday) }
+  } else if (date_preset && date_preset.includes('since:')) {
+    // Custom range: "since:2026-04-01,until:2026-04-27"
+    const parts = date_preset.split(',')
+    const since = parts[0]?.replace('since:','')
+    const until = parts[1]?.replace('until:','')
+    if (since && until) metaTimeRange = { since, until }
+  } else {
+    metaDatePreset = date_preset ?? 'this_month'
+  }
+
+  const baseParams: Record<string,string> = { access_token }
+  if (metaDatePreset) baseParams.date_preset = metaDatePreset
+  if (metaTimeRange) baseParams.time_range = JSON.stringify(metaTimeRange)
 
   // Determine level and ID based on filters
   let insightsUrl: string

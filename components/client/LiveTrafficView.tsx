@@ -113,6 +113,10 @@ function FilterDropdown({ label, options, value, onChange }: {
 export default function LiveTrafficView({ integrations }: Props) {
   const [preset, setPreset] = useState('this_month')
   const [showPresets, setShowPresets] = useState(false)
+  const [showCalendar, setShowCalendar] = useState(false)
+  const [calStart, setCalStart] = useState('')
+  const [calEnd, setCalEnd] = useState('')
+  const [calStep, setCalStep] = useState<'start'|'end'>('start')
   const [platform, setPlatform] = useState<'meta' | 'google'>('meta')
   const [data, setData] = useState<any>(null)
   const [loading, setLoading] = useState(false)
@@ -159,7 +163,14 @@ export default function LiveTrafficView({ integrations }: Props) {
   const campaigns: any[] = data?.campaigns ?? []
   const daily: any[] = data?.daily ?? []
   const campaignList: any[] = data?.campaign_list ?? []
-  const presetLabel = PRESETS.find(p => p.key === preset)?.label ?? 'Este mês'
+  const presetLabel = preset.includes('since:')
+    ? (() => {
+        const parts = preset.split(',')
+        const since = parts[0]?.replace('since:','')
+        const until = parts[1]?.replace('until:','')
+        return `${since} → ${until}`
+      })()
+    : PRESETS.find(p => p.key === preset)?.label ?? 'Este mês'
 
   // Group results by type
   const resultGroups: Record<string, { total: number; spend: number }> = {}
@@ -218,21 +229,67 @@ export default function LiveTrafficView({ integrations }: Props) {
             />
           )}
 
-          {/* Period selector */}
+          {/* Period selector with calendar */}
           <div className="relative ml-auto">
-            <button onClick={() => setShowPresets(o => !o)}
+            <button onClick={() => { setShowPresets(o => !o); setShowCalendar(false) }}
               className="flex items-center gap-2 bg-gray-900 border border-white/10 hover:border-white/30 text-white text-xs px-4 py-2 rounded-lg transition-colors">
               <span className="text-gray-300">{presetLabel}</span>
               <ChevronDown size={12} className="text-gray-400" />
             </button>
             {showPresets && (
-              <div className="absolute top-full right-0 mt-1 bg-gray-900 border border-white/10 rounded-xl shadow-2xl z-50 min-w-[160px]">
+              <div className="absolute top-full right-0 mt-1 bg-gray-900 border border-white/10 rounded-xl shadow-2xl z-50 min-w-[180px]">
                 {PRESETS.map(pr => (
                   <button key={pr.key} onClick={() => { setPreset(pr.key); setShowPresets(false) }}
-                    className={`w-full text-left px-4 py-2.5 text-xs hover:bg-white/5 transition-colors ${preset === pr.key ? 'text-red-400 bg-white/5' : 'text-gray-300'}`}>
+                    className={`w-full text-left px-4 py-2.5 text-xs hover:bg-white/5 transition-colors ${preset === pr.key && !preset.includes('since') ? 'text-red-400 bg-white/5' : 'text-gray-300'}`}>
                     {pr.label}
                   </button>
                 ))}
+                <div className="border-t border-white/10">
+                  <button onClick={() => { setShowCalendar(true); setShowPresets(false); setCalStep('start'); setCalStart(''); setCalEnd('') }}
+                    className="w-full text-left px-4 py-2.5 text-xs text-gray-300 hover:bg-white/5 transition-colors flex items-center gap-2">
+                    📅 Período personalizado
+                  </button>
+                </div>
+              </div>
+            )}
+            {/* Calendar picker */}
+            {showCalendar && (
+              <div className="absolute top-full right-0 mt-1 bg-gray-900 border border-white/10 rounded-xl shadow-2xl z-50 p-4 min-w-[280px]">
+                <p className="text-xs text-gray-400 mb-3 font-medium">
+                  {calStep === 'start' ? 'Selecione a data de início' : 'Selecione a data de término'}
+                </p>
+                <div className="grid grid-cols-2 gap-3 mb-3">
+                  <div>
+                    <label className="text-xs text-gray-500 mb-1 block">Início</label>
+                    <input type="date" value={calStart}
+                      onChange={e => { setCalStart(e.target.value); setCalStep('end') }}
+                      className="w-full bg-gray-800 border border-white/10 text-white text-xs rounded-lg px-3 py-2 focus:outline-none focus:border-red-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs text-gray-500 mb-1 block">Término</label>
+                    <input type="date" value={calEnd}
+                      onChange={e => setCalEnd(e.target.value)}
+                      min={calStart}
+                      className="w-full bg-gray-800 border border-white/10 text-white text-xs rounded-lg px-3 py-2 focus:outline-none focus:border-red-500"
+                    />
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <button onClick={() => setShowCalendar(false)}
+                    className="flex-1 text-xs text-gray-400 border border-white/10 px-3 py-2 rounded-lg hover:bg-white/5 transition-colors">
+                    Cancelar
+                  </button>
+                  <button
+                    disabled={!calStart || !calEnd}
+                    onClick={() => {
+                      setPreset(`since:${calStart},until:${calEnd}`)
+                      setShowCalendar(false)
+                    }}
+                    className="flex-1 text-xs bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-lg transition-colors disabled:opacity-40 font-medium">
+                    Aplicar
+                  </button>
+                </div>
               </div>
             )}
           </div>
