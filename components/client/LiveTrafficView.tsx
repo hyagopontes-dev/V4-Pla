@@ -418,8 +418,8 @@ export default function LiveTrafficView({ integrations, dashboardType = 'inside_
               <SectionTitle>1. Visão Geral</SectionTitle>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 <KpiCard label="Valor Gasto" value={cur.spend} prev={prev?.spend} prevLabel={prevShort} format="brl" accent />
-                <KpiCard label="Leads Gerados" value={cur.leads || cur.messages} prev={prev?.leads || prev?.messages} prevLabel={prevShort} />
-                <KpiCard label="CPL" value={cur.cpl || cur.cpm_messages} prev={prev?.cpl || prev?.cpm_messages} prevLabel={prevShort} format="brl" />
+                <KpiCard label="Leads Gerados" value={cur.leads} prev={prev?.leads} prevLabel={prevShort} />
+                <KpiCard label="CPL (total)" value={cur.cpl} prev={prev?.cpl} prevLabel={prevShort} format="brl" />
                 <KpiCard label="CTR" value={cur.ctr} prev={prev?.ctr} prevLabel={prevShort} format="pct" />
                 <KpiCard label="CPC" value={cur.cpc} prev={prev?.cpc} prevLabel={prevShort} format="brl" />
                 <KpiCard label="Frequência" value={cur.frequency} prev={prev?.frequency} prevLabel={prevShort} />
@@ -430,12 +430,37 @@ export default function LiveTrafficView({ integrations, dashboardType = 'inside_
             {/* 2. Geração de Leads */}
             <div className="bg-black rounded-xl border border-white/10 p-5">
               <SectionTitle>2. Geração de Leads</SectionTitle>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                <KpiCard label="Leads / Conversas" value={cur.leads || cur.messages} prev={prev?.leads || prev?.messages} prevLabel={prevShort} />
-                <KpiCard label="CPL" value={cur.cpl || cur.cpm_messages} prev={prev?.cpl || prev?.cpm_messages} prevLabel={prevShort} format="brl" />
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
+                <KpiCard label="Total de Leads" value={cur.leads} prev={prev?.leads} prevLabel={prevShort} accent />
+                <KpiCard label="CPL (total)" value={cur.cpl} prev={prev?.cpl} prevLabel={prevShort} format="brl" />
                 <KpiCard label="Taxa Conv. (clique→lead)" value={cur.conv_rate_clicks_lead} prev={prev?.conv_rate_clicks_lead} prevLabel={prevShort} format="pct" />
-                {cur.messages > 0 && <KpiCard label="Conversas iniciadas" value={cur.messages} prev={prev?.messages} prevLabel={prevShort} />}
               </div>
+              {/* Lead breakdown by type */}
+              {(cur.leads_form > 0 || cur.leads_messages > 0 || cur.leads_registration > 0) && (
+                <div className="grid grid-cols-3 gap-3 pt-3 border-t border-white/10">
+                  {cur.leads_form > 0 && (
+                    <div className="bg-gray-900 rounded-xl p-3 border border-white/5">
+                      <p className="text-xs text-gray-500 mb-1">📋 Formulários / Site</p>
+                      <p className="text-lg font-bold text-white">{fNum(cur.leads_form)}</p>
+                      <p className="text-xs text-gray-600 mt-0.5">CPL: {cur.leads_form > 0 ? fBRL(cur.spend / cur.leads_form) : '—'}</p>
+                    </div>
+                  )}
+                  {cur.leads_messages > 0 && (
+                    <div className="bg-gray-900 rounded-xl p-3 border border-white/5">
+                      <p className="text-xs text-gray-500 mb-1">💬 Conversas / WhatsApp</p>
+                      <p className="text-lg font-bold text-white">{fNum(cur.leads_messages)}</p>
+                      <p className="text-xs text-gray-600 mt-0.5">CPL: {fBRL(cur.spend / cur.leads_messages)}</p>
+                    </div>
+                  )}
+                  {cur.leads_registration > 0 && (
+                    <div className="bg-gray-900 rounded-xl p-3 border border-white/5">
+                      <p className="text-xs text-gray-500 mb-1">📝 Cadastros</p>
+                      <p className="text-lg font-bold text-white">{fNum(cur.leads_registration)}</p>
+                      <p className="text-xs text-gray-600 mt-0.5">CPL: {fBRL(cur.spend / cur.leads_registration)}</p>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* 3. Qualidade */}
@@ -489,8 +514,8 @@ export default function LiveTrafficView({ integrations, dashboardType = 'inside_
                             {c.result_label && <p className="text-gray-600 mt-0.5">{c.result_label}</p>}
                           </td>
                           <td className="px-4 py-3 text-right text-red-400 font-semibold">{fBRL(c.spend)}</td>
-                          <td className="px-4 py-3 text-right text-green-400 font-bold">{c.leads || c.messages || c.result_value || '—'}</td>
-                          <td className="px-4 py-3 text-right text-gray-300">{c.cpl > 0 ? fBRL(c.cpl) : c.cpm_messages > 0 ? fBRL(c.cpm_messages) : '—'}</td>
+                          <td className="px-4 py-3 text-right text-green-400 font-bold">{c.leads > 0 ? fNum(c.leads) : c.result_value > 0 ? fNum(c.result_value) : '—'}</td>
+                          <td className="px-4 py-3 text-right text-gray-300">{c.leads > 0 ? fBRL(c.spend / c.leads) : c.result_value > 0 ? fBRL(c.spend / c.result_value) : '—'}</td>
                           <td className="px-4 py-3 text-right text-gray-300">{fPct(c.ctr)}</td>
                           <td className="px-4 py-3 text-right text-gray-300">{c.cpc > 0 ? fBRL(c.cpc) : '—'}</td>
                           <td className="px-4 py-3 text-right text-gray-300">{c.frequency.toFixed(2)}x</td>

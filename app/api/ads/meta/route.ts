@@ -114,9 +114,19 @@ function parseInsight(insight: any) {
   const spend = parseFloat(insight?.spend ?? '0')
   const purchases = getActionValue(actions, 'purchase') || getActionValue(actions, 'omni_purchase')
   const roas = spend > 0 && convValue ? parseFloat(convValue.value) / spend : 0
-  const leads = getActionValue(actions, 'lead') || getActionValue(actions, 'onsite_conversion.lead_grouped')
-  const messages = getActionValue(actions, 'onsite_conversion.messaging_conversation_started_7d')
   const clicks = parseInt(insight?.clicks ?? '0')
+
+  // CPL: soma TODOS os tipos que representam leads/conversões de topo de funil
+  const leadsForm = getActionValue(actions, 'lead') + getActionValue(actions, 'onsite_conversion.lead_grouped')
+  const leadsMessages = getActionValue(actions, 'onsite_conversion.messaging_conversation_started_7d')
+    + getActionValue(actions, 'onsite_conversion.messaging_first_reply')
+  const leadsRegistration = getActionValue(actions, 'complete_registration')
+    + getActionValue(actions, 'omni_complete_registration')
+  // Total de leads = formulário + conversa + cadastro (qualquer canal)
+  const totalLeads = leadsForm + leadsMessages + leadsRegistration
+
+  // Para compatibilidade: messages é o valor de conversas isolado
+  const messages = leadsMessages
 
   return {
     spend,
@@ -131,8 +141,11 @@ function parseInsight(insight: any) {
     cpa: purchases > 0 ? spend / purchases : 0,
     conversion_value: convValue ? parseFloat(convValue.value) : 0,
     roas,
-    leads,
-    cpl: leads > 0 ? spend / leads : 0,
+    leads: totalLeads,
+    leads_form: leadsForm,
+    leads_messages: leadsMessages,
+    leads_registration: leadsRegistration,
+    cpl: totalLeads > 0 ? spend / totalLeads : 0,
     messages,
     cpm_messages: messages > 0 ? spend / messages : 0,
     // Funnel
@@ -142,7 +155,7 @@ function parseInsight(insight: any) {
     cost_view_content: getActionCost(costPer, 'offsite_conversion.fb_pixel_view_content'),
     cost_add_to_cart: getActionCost(costPer, 'offsite_conversion.fb_pixel_add_to_cart'),
     cost_initiate_checkout: getActionCost(costPer, 'offsite_conversion.fb_pixel_initiate_checkout'),
-    conv_rate_clicks_lead: clicks > 0 && leads > 0 ? (leads / clicks) * 100 : 0,
+    conv_rate_clicks_lead: clicks > 0 && totalLeads > 0 ? (totalLeads / clicks) * 100 : 0,
     conv_rate_clicks_purchase: clicks > 0 && purchases > 0 ? (purchases / clicks) * 100 : 0,
   }
 }
@@ -153,7 +166,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Token ou Account ID ausente' }, { status: 400 })
 
   const cleanId = account_id.replace('act_', '')
-  const cacheKey = `meta-v5-${cleanId}-${date_preset}-${filter_campaign_id ?? ''}-${filter_adset_id ?? ''}-${dashboard_type}`
+  const cacheKey = `meta-v6-${cleanId}-${date_preset}-${filter_campaign_id ?? ''}-${filter_adset_id ?? ''}-${dashboard_type}`
   const cached = CACHE.get(cacheKey)
   if (cached && Date.now() - cached.ts < TTL) return NextResponse.json(cached.data)
 
@@ -210,6 +223,7 @@ export async function POST(request: NextRequest) {
   const rows = (breakdownRaw.data ?? []).map((c: any) => {
     const objective = c.objective ?? objMap[c.campaign_id] ?? 'OUTCOME_TRAFFIC'
     const parsed = parseInsight(c)
+    // Per campaign: use parsed.leads (already sums all types) as the lead count
     const result = getBestResult(objective, c.actions ?? [], c.cost_per_action_type ?? [])
     // Campaign classification for ecommerce
     let classification = ''
