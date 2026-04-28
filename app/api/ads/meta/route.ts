@@ -116,16 +116,23 @@ function parseInsight(insight: any) {
   const roas = spend > 0 && convValue ? parseFloat(convValue.value) / spend : 0
   const clicks = parseInt(insight?.clicks ?? '0')
 
-  // CPL: soma TODOS os tipos que representam leads/conversões de topo de funil
-  const leadsForm = getActionValue(actions, 'lead') + getActionValue(actions, 'onsite_conversion.lead_grouped')
-  const leadsMessages = getActionValue(actions, 'onsite_conversion.messaging_conversation_started_7d')
-    + getActionValue(actions, 'onsite_conversion.messaging_first_reply')
-  const leadsRegistration = getActionValue(actions, 'complete_registration')
-    + getActionValue(actions, 'omni_complete_registration')
-  // Total de leads = formulário + conversa + cadastro (qualquer canal)
+  // CPL: usar apenas o valor mais alto de cada tipo para evitar duplicatas
+  // lead_grouped já inclui lead, então usar apenas lead_grouped se existir, senão lead
+  const leadsFormRaw = getActionValue(actions, 'onsite_conversion.lead_grouped') || getActionValue(actions, 'lead')
+  // messaging_conversation_started_7d é o mais completo para conversas
+  const leadsMessagesRaw = getActionValue(actions, 'onsite_conversion.messaging_conversation_started_7d')
+  // complete_registration separado (não duplica com lead)
+  const leadsRegistrationRaw = getActionValue(actions, 'omni_complete_registration') || getActionValue(actions, 'complete_registration')
+
+  const leadsForm = leadsFormRaw
+  const leadsMessages = leadsMessagesRaw
+  // Só conta cadastro se não for o mesmo evento que lead
+  const leadsRegistration = leadsRegistrationRaw > leadsFormRaw ? leadsRegistrationRaw - leadsFormRaw : 0
+
+  // Total de leads sem duplicatas
   const totalLeads = leadsForm + leadsMessages + leadsRegistration
 
-  // Para compatibilidade: messages é o valor de conversas isolado
+  // Para compatibilidade
   const messages = leadsMessages
 
   return {
@@ -166,7 +173,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Token ou Account ID ausente' }, { status: 400 })
 
   const cleanId = account_id.replace('act_', '')
-  const cacheKey = `meta-v6-${cleanId}-${date_preset}-${filter_campaign_id ?? ''}-${filter_adset_id ?? ''}-${dashboard_type}`
+  const cacheKey = `meta-v7-${cleanId}-${date_preset}-${filter_campaign_id ?? ''}-${filter_adset_id ?? ''}-${dashboard_type}`
   const cached = CACHE.get(cacheKey)
   if (cached && Date.now() - cached.ts < TTL) return NextResponse.json(cached.data)
 
