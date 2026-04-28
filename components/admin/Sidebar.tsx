@@ -1,7 +1,7 @@
 'use client'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { LayoutDashboard, Users, LogOut, Sparkles } from 'lucide-react'
+import { LayoutDashboard, Users, LogOut, Sparkles, Trophy } from 'lucide-react'
 import { createClient } from '@/lib/supabase'
 import clsx from 'clsx'
 
@@ -9,6 +9,7 @@ const nav = [
   { href: '/admin',    label: 'Painel',   icon: LayoutDashboard },
   { href: '/admin/clients', label: 'Clientes', icon: Users },
   { href: '/admin/ai', label: 'IA Studio', icon: Sparkles },
+  { href: '/admin/planning', label: 'Planejamento', icon: Trophy },
 ]
 
 export default function AdminSidebar() {
