@@ -119,3 +119,20 @@ create table if not exists public.strategic_planning (
   updated_at timestamptz default now()
 );
 alter table public.strategic_planning disable row level security;
+
+-- Add benchmark phase columns (p3b)
+alter table public.strategic_planning
+  add column if not exists p3b_concorrentes_diretos text,
+  add column if not exists p3b_concorrentes_indiretos text,
+  add column if not exists p3b_oferta text,
+  add column if not exists p3b_ticket_medio text,
+  add column if not exists p3b_diferenciais text,
+  add column if not exists p3b_reclamacoes text,
+  add column if not exists p3b_oportunidade text,
+  add column if not exists p3b_responsavel text,
+  add column if not exists p3b_prazo text,
+  add column if not exists p3b_concluido boolean default false,
+  add column if not exists phase3b_score int default 0,
+  -- Rename market analysis fields for p2 (new fields)
+  add column if not exists p2_reputacao text,
+  add column if not exists p2_processo_comercial text;

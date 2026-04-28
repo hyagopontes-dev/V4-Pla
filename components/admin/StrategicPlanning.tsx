@@ -34,29 +34,38 @@ const PHASES = [
   },
   {
     id: 2, key: 'p2', emoji: '📊', icon: Target, color: 'from-purple-600 to-purple-700',
-    title: 'Análise de Mercado', subtitle: 'Google Meu Negócio + Benchmark',
-    description: 'Analisar concorrentes, posicionamento, oferta, autoridade e processo comercial.',
+    title: 'Análise de Mercado', subtitle: 'Google Meu Negócio + Presença Digital',
+    description: 'Analisar a presença digital do cliente: posicionamento, autoridade, tráfego e reputação.',
     fields: [
-      { key: 'concorrentes_diretos', label: 'Concorrentes diretos', placeholder: 'Nome + URL + diferencial...' },
-      { key: 'concorrentes_indiretos', label: 'Concorrentes indiretos', placeholder: 'Alternativas que o cliente usa...' },
-      { key: 'posicionamento', label: 'Posicionamento deles', placeholder: 'Como se posicionam...' },
-      { key: 'oferta', label: 'Oferta principal', placeholder: 'O que oferecem...' },
-      { key: 'ticket_medio', label: 'Ticket médio', placeholder: 'Faixa de preço praticada...' },
-      { key: 'autoridade', label: 'Autoridade', placeholder: 'Seguidores, avaliações, reconhecimento...' },
-      { key: 'trafego', label: 'Tráfego estimado', placeholder: 'Volume de tráfego dos concorrentes...' },
-      { key: 'anuncios', label: 'Anúncios que rodam', placeholder: 'Tipo de anúncios, hooks usados...' },
-      { key: 'redes_sociais', label: 'Presença em redes sociais', placeholder: 'Plataformas e engagement...' },
-      { key: 'paginas', label: 'Páginas e funis', placeholder: 'Landing pages, funis identificados...' },
-      { key: 'diferenciais', label: 'Diferenciais deles', placeholder: 'O que fazem bem...' },
-      { key: 'reclamacoes', label: 'Reclamações (Reclame Aqui, etc)', placeholder: 'Pontos fracos, reclamações...' },
-      { key: 'reputacao', label: 'Reputação geral', placeholder: 'Nota, percepção do mercado...' },
-      { key: 'processo_comercial', label: 'Processo comercial', placeholder: 'Como vendem, abordagem...' },
-      { key: 'pontos_criticos', label: '⚠️ Pontos críticos identificados', placeholder: 'Principais alertas e oportunidades...' },
+      { key: 'posicionamento', label: 'Posicionamento atual', placeholder: 'Como o cliente se posiciona hoje...' },
+      { key: 'autoridade', label: 'Autoridade digital', placeholder: 'Seguidores, avaliações, reconhecimento...' },
+      { key: 'trafego', label: 'Tráfego atual', placeholder: 'Volume de tráfego orgânico e pago...' },
+      { key: 'anuncios', label: 'Anúncios que já rodou', placeholder: 'Histórico de campanhas, o que funcionou...' },
+      { key: 'redes_sociais', label: 'Presença em redes sociais', placeholder: 'Plataformas, engagement, frequência...' },
+      { key: 'paginas', label: 'Páginas e funis existentes', placeholder: 'Landing pages, site, funis identificados...' },
+      { key: 'reputacao', label: 'Reputação (Google, Reclame Aqui)', placeholder: 'Nota, avaliações, percepção...' },
+      { key: 'processo_comercial', label: 'Processo comercial atual', placeholder: 'Como vende hoje, fluxo de atendimento...' },
+      { key: 'pontos_criticos', label: '⚠️ Pontos críticos identificados', placeholder: 'Principais gaps e oportunidades...' },
     ],
     checks: null,
   },
   {
-    id: 3, key: 'p3', emoji: '🎯', icon: Users, color: 'from-orange-600 to-orange-700',
+    id: 3, key: 'p3b', emoji: '🏆', icon: Target, color: 'from-violet-600 to-violet-700',
+    title: 'Benchmark de Concorrentes', subtitle: 'Análise competitiva detalhada',
+    description: 'Mapear concorrentes diretos e indiretos, diferenciais, pontos fracos e oportunidades.',
+    fields: [
+      { key: 'concorrentes_diretos', label: 'Concorrentes diretos', placeholder: 'Nome + URL + diferencial de cada um...' },
+      { key: 'concorrentes_indiretos', label: 'Concorrentes indiretos', placeholder: 'Alternativas que o público usa...' },
+      { key: 'oferta', label: 'Ofertas deles', placeholder: 'O que cada concorrente oferece...' },
+      { key: 'ticket_medio', label: 'Ticket médio deles', placeholder: 'Faixa de preço praticada...' },
+      { key: 'diferenciais', label: 'Diferenciais deles', placeholder: 'O que fazem bem, pontos fortes...' },
+      { key: 'reclamacoes', label: 'Fraquezas e reclamações', placeholder: 'Reclame Aqui, reviews negativos, pontos fracos...' },
+      { key: 'oportunidade', label: '🎯 Oportunidade identificada', placeholder: 'Onde podemos nos diferenciar e ganhar mercado...' },
+    ],
+    checks: null,
+  },
+  {
+    id: 4, key: 'p3', emoji: '🎯', icon: Users, color: 'from-orange-600 to-orange-700',
     title: 'ICP e Grid de Público', subtitle: 'Identificação do cliente ideal',
     description: 'Mapear quem é o público, suas dores, desejos, objeções e gatilhos de compra.',
     fields: [
@@ -71,7 +80,7 @@ const PHASES = [
     checks: null,
   },
   {
-    id: 4, key: 'p4', emoji: '🔗', icon: Link2, color: 'from-cyan-600 to-cyan-700',
+    id: 5, key: 'p4', emoji: '🔗', icon: Link2, color: 'from-cyan-600 to-cyan-700',
     title: 'Checklist Operacional', subtitle: 'Links e Estrutura',
     description: 'Centralizar todos os links e acessos necessários para a operação.',
     fields: [
@@ -88,7 +97,7 @@ const PHASES = [
     checks: null,
   },
   {
-    id: 5, key: 'p5', emoji: '⚡', icon: Zap, color: 'from-yellow-600 to-yellow-700',
+    id: 6, key: 'p5', emoji: '⚡', icon: Zap, color: 'from-yellow-600 to-yellow-700',
     title: 'Fast Traffic', subtitle: 'Preparação para lançamento imediato',
     description: 'Levantar criativos, provas sociais e verba para iniciar campanhas imediatamente.',
     fields: [
@@ -99,7 +108,7 @@ const PHASES = [
     checks: null,
   },
   {
-    id: 6, key: 'p6', emoji: '🔐', icon: Lock, color: 'from-red-600 to-red-700',
+    id: 7, key: 'p6', emoji: '🔐', icon: Lock, color: 'from-red-600 to-red-700',
     title: 'Acessos', subtitle: 'Controle operacional de acessos',
     description: 'Centralizar e controlar todos os acessos necessários para a operação.',
     fields: [
@@ -108,7 +117,7 @@ const PHASES = [
     checks: null,
   },
   {
-    id: 7, key: 'p7', emoji: '🎨', icon: Palette, color: 'from-pink-600 to-pink-700',
+    id: 8, key: 'p7', emoji: '🎨', icon: Palette, color: 'from-pink-600 to-pink-700',
     title: 'Identidade Visual', subtitle: 'Assets e materiais da marca',
     description: 'Verificar disponibilidade de todos os materiais visuais necessários.',
     fields: [],
@@ -221,6 +230,7 @@ export default function StrategicPlanning({ clients, selectedClientId, selectedC
     payload[`${prefix}prazo`] = form[`${prefix}prazo`] ?? null
     payload[`${prefix}concluido`] = form[`${prefix}concluido`] ?? false
 
+    // p3b fields are stored with p3b_ prefix in the same table (needs SQL column additions)
     const { data: existing } = await supabase.from('strategic_planning').select('id').eq('client_id', selectedClientId).single()
     if (existing) {
       await supabase.from('strategic_planning').update(payload).eq('client_id', selectedClientId)
@@ -282,7 +292,7 @@ export default function StrategicPlanning({ clients, selectedClientId, selectedC
           </div>
         </div>
       ) : (
-        <div className="max-w-5xl mx-auto px-6 py-6 space-y-6">
+        <div className="px-8 py-6 space-y-6">
           
           {/* MISSION CARD */}
           <div className="bg-gradient-to-r from-gray-900 to-gray-800 rounded-2xl border border-white/10 p-5">

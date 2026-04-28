@@ -1,6 +1,8 @@
 import { createServerSupabase } from '@/lib/supabase-server'
 import { redirect } from 'next/navigation'
 import StrategicPlanning from '@/components/admin/StrategicPlanning'
+import AdminSidebar from '@/components/admin/Sidebar'
+import AdminGuard from '@/components/admin/AdminGuard'
 
 export default async function PlanningPage({ searchParams }: { searchParams: Promise<{ client?: string }> }) {
   const { client: clientId } = await searchParams
