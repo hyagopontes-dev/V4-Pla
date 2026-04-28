@@ -12,7 +12,7 @@ export default async function PlanningPage({ searchParams }: { searchParams: Pro
   let selectedClient = null
   
   if (clientId) {
-    selectedClient = clients?.find(c => c.id === clientId)
+    selectedClient = clients?.find(c => c.id === clientId) ?? null
     const { data } = await supabase.from('strategic_planning').select('*').eq('client_id', clientId).single()
     planning = data
   }
