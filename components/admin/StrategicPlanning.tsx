@@ -281,16 +281,20 @@ export default function StrategicPlanning({ clients, selectedClientId, selectedC
 
           <div className="flex items-center gap-3">
             {selectedClientId && (
-              <button
-                onClick={() => {
-                  const url = `/api/planning-pdf?client_id=${selectedClientId}`
-                  const win = window.open(url, '_blank')
-                  if (win) setTimeout(() => { try { win.print() } catch {} }, 1500)
-                }}
+              <a
+                href={`/api/planning-pdf?client_id=${selectedClientId}`}
+                target="_blank"
                 className="flex items-center gap-2 bg-gray-800 hover:bg-gray-700 border border-white/10 text-white text-xs px-4 py-2 rounded-lg transition-colors"
               >
                 <FileDown size={14} /> Exportar PDF
-              </button>
+              </a>
+              <a
+                href={`/api/planning-pptx?client_id=${selectedClientId}`}
+                download
+                className="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white text-xs px-4 py-2 rounded-lg transition-colors"
+              >
+                <Download size={14} /> Baixar PPT
+              </a>
             )}
           {/* Client selector */}
           <div className="flex items-center gap-3">
