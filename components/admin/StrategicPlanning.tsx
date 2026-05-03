@@ -281,34 +281,22 @@ export default function StrategicPlanning({ clients, selectedClientId, selectedC
 
           <div className="flex items-center gap-3">
             {selectedClientId && (
-              <a
-                href={`/api/planning-pdf?client_id=${selectedClientId}`}
-                target="_blank"
-                className="flex items-center gap-2 bg-gray-800 hover:bg-gray-700 border border-white/10 text-white text-xs px-4 py-2 rounded-lg transition-colors"
-              >
-                <FileDown size={14} /> Exportar PDF
-              </a>
-              <a
-                href={`/api/planning-pptx?client_id=${selectedClientId}`}
-                download
-                className="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white text-xs px-4 py-2 rounded-lg transition-colors"
-              >
-                <Download size={14} /> Baixar PPT
-              </a>
-            )}
-          {/* Client selector */}
-          <div className="flex items-center gap-3">
-            {selectedClientId && (
-              <button
-                onClick={() => {
-                  const url = `/api/planning-pdf?client_id=${selectedClientId}`
-                  const win = window.open(url, '_blank')
-                  if (win) setTimeout(() => { try { win.print() } catch {} }, 1800)
-                }}
-                className="flex items-center gap-2 bg-gray-800 hover:bg-gray-700 text-white border border-white/10 text-xs px-4 py-2 rounded-lg transition-colors"
-              >
-                <Download size={14} /> Exportar PDF
-              </button>
+              <>
+                <a
+                  href={`/api/planning-pdf?client_id=${selectedClientId}`}
+                  target="_blank"
+                  className="flex items-center gap-2 bg-gray-800 hover:bg-gray-700 border border-white/10 text-white text-xs px-4 py-2 rounded-lg transition-colors"
+                >
+                  <FileDown size={14} /> Exportar PDF
+                </a>
+                <a
+                  href={`/api/planning-pptx?client_id=${selectedClientId}`}
+                  download
+                  className="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white text-xs px-4 py-2 rounded-lg transition-colors"
+                >
+                  <Download size={14} /> Baixar PPT
+                </a>
+              </>
             )}
             <select
               className="bg-gray-900 border border-white/10 text-white text-sm px-4 py-2 rounded-lg focus:outline-none focus:border-red-500"
@@ -318,7 +306,6 @@ export default function StrategicPlanning({ clients, selectedClientId, selectedC
               <option value="">Selecionar cliente...</option>
               {clients.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
             </select>
-          </div>
           </div>
         </div>
       </div>
