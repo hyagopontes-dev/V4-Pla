@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { 
   ChevronDown, ChevronRight, CheckCircle, Circle, AlertTriangle, 
   Zap, Target, Users, Link2, Rocket, Lock, Palette, DollarSign, 
-  Flag, Trophy, Clock, User, Save, ChevronLeft, ChevronUp, FileDown
+  Flag, Trophy, Clock, User, Save, ChevronLeft, ChevronUp, FileDown, Download
 } from 'lucide-react'
 
 interface Client { id: string; name: string; slug: string }
