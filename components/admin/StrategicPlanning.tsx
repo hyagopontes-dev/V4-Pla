@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { 
   ChevronDown, ChevronRight, CheckCircle, Circle, AlertTriangle, 
   Zap, Target, Users, Link2, Rocket, Lock, Palette, DollarSign, 
-  Flag, Trophy, Clock, User, Save, ChevronLeft, ChevronUp
+  Flag, Trophy, Clock, User, Save, ChevronLeft, ChevronUp, FileDown
 } from 'lucide-react'
 
 interface Client { id: string; name: string; slug: string }
@@ -279,15 +279,43 @@ export default function StrategicPlanning({ clients, selectedClientId, selectedC
             </div>
           </div>
 
+          <div className="flex items-center gap-3">
+            {selectedClientId && (
+              <button
+                onClick={() => {
+                  const url = `/api/planning-pdf?client_id=${selectedClientId}`
+                  const win = window.open(url, '_blank')
+                  if (win) setTimeout(() => { try { win.print() } catch {} }, 1500)
+                }}
+                className="flex items-center gap-2 bg-gray-800 hover:bg-gray-700 border border-white/10 text-white text-xs px-4 py-2 rounded-lg transition-colors"
+              >
+                <FileDown size={14} /> Exportar PDF
+              </button>
+            )}
           {/* Client selector */}
-          <select
-            className="bg-gray-900 border border-white/10 text-white text-sm px-4 py-2 rounded-lg focus:outline-none focus:border-red-500"
-            value={selectedClientId}
-            onChange={e => router.push(`/admin/planning?client=${e.target.value}`)}
-          >
-            <option value="">Selecionar cliente...</option>
-            {clients.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-          </select>
+          <div className="flex items-center gap-3">
+            {selectedClientId && (
+              <button
+                onClick={() => {
+                  const url = `/api/planning-pdf?client_id=${selectedClientId}`
+                  const win = window.open(url, '_blank')
+                  if (win) setTimeout(() => { try { win.print() } catch {} }, 1800)
+                }}
+                className="flex items-center gap-2 bg-gray-800 hover:bg-gray-700 text-white border border-white/10 text-xs px-4 py-2 rounded-lg transition-colors"
+              >
+                <Download size={14} /> Exportar PDF
+              </button>
+            )}
+            <select
+              className="bg-gray-900 border border-white/10 text-white text-sm px-4 py-2 rounded-lg focus:outline-none focus:border-red-500"
+              value={selectedClientId}
+              onChange={e => router.push(`/admin/planning?client=${e.target.value}`)}
+            >
+              <option value="">Selecionar cliente...</option>
+              {clients.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+            </select>
+          </div>
+          </div>
         </div>
       </div>
 

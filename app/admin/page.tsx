@@ -1,6 +1,7 @@
 import { createServerSupabase } from '@/lib/supabase-server'
+import ClientsListClient from '@/components/admin/ClientsListClient'
 import Link from 'next/link'
-import { Users, TrendingUp, Package, Plus, Eye } from 'lucide-react'
+import { Plus, Users, TrendingUp, Package } from 'lucide-react'
 
 export default async function AdminHome() {
   const supabase = await createServerSupabase()
@@ -24,8 +25,8 @@ export default async function AdminHome() {
       <div className="grid grid-cols-3 gap-4 mb-8">
         <div className="card">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-brand-50 rounded-lg flex items-center justify-center">
-              <Users size={20} className="text-brand-700" />
+            <div className="w-10 h-10 bg-red-50 rounded-lg flex items-center justify-center">
+              <Users size={20} className="text-red-600" />
             </div>
             <div>
               <p className="text-xs text-gray-500">Total de clientes</p>
@@ -57,63 +58,7 @@ export default async function AdminHome() {
         </div>
       </div>
 
-      <div className="card p-0 overflow-hidden">
-        <div className="px-5 py-4 border-b border-gray-100">
-          <h2 className="font-medium text-gray-900">Clientes</h2>
-        </div>
-        {!clients?.length ? (
-          <div className="p-12 text-center">
-            <Users size={40} className="text-gray-300 mx-auto mb-3" />
-            <p className="text-gray-500 text-sm">Nenhum cliente cadastrado ainda.</p>
-            <Link href="/admin/clients/new" className="btn-primary inline-flex mt-4 items-center gap-2">
-              <Plus size={14} /> Adicionar primeiro cliente
-            </Link>
-          </div>
-        ) : (
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-gray-100 bg-gray-50">
-                <th className="text-left px-5 py-3 text-xs font-medium text-gray-500">Cliente</th>
-                <th className="text-left px-5 py-3 text-xs font-medium text-gray-500">Slug</th>
-                <th className="text-left px-5 py-3 text-xs font-medium text-gray-500">Peças/mês</th>
-                <th className="text-left px-5 py-3 text-xs font-medium text-gray-500">Status</th>
-                <th className="px-5 py-3 text-xs font-medium text-gray-500 text-right">Ações</th>
-              </tr>
-            </thead>
-            <tbody>
-              {clients.map(client => (
-                <tr key={client.id} className="border-b border-gray-50 hover:bg-gray-50">
-                  <td className="px-5 py-3 font-medium text-gray-900">{client.name}</td>
-                  <td className="px-5 py-3 text-gray-500 font-mono text-xs">{client.slug}</td>
-                  <td className="px-5 py-3 text-gray-700">{client.contract_pieces}</td>
-                  <td className="px-5 py-3">
-                    {client.active
-                      ? <span className="badge-success">Ativo</span>
-                      : <span className="badge-neutral">Inativo</span>}
-                  </td>
-                  <td className="px-5 py-3">
-                    <div className="flex items-center gap-3 justify-end">
-                      <Link
-                        href={`/dashboard?client=${client.slug}`}
-                        className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-gray-800 border border-gray-200 hover:border-gray-400 px-3 py-1.5 rounded-lg transition-colors"
-                        target="_blank"
-                      >
-                        <Eye size={13} /> Ver dashboard
-                      </Link>
-                      <Link
-                        href={`/admin/clients/${client.id}`}
-                        className="text-brand-500 hover:text-brand-700 text-xs font-medium"
-                      >
-                        Gerenciar →
-                      </Link>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </div>
+      <ClientsListClient clients={clients ?? []} />
     </div>
   )
 }
