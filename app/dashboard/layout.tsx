@@ -5,14 +5,14 @@ import ClientGuard from '@/components/client/ClientGuard'
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
     <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="w-8 h-8 border-2 border-brand-500 border-t-transparent rounded-full animate-spin" />
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0A0A0A' }}>
+        <div style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: '24px', letterSpacing: '0.1em', color: '#F5C518' }}>AVHANT</div>
       </div>
     }>
       <ClientGuard>
-        <div className="min-h-screen bg-gray-50">
+        <div style={{ minHeight: '100vh', background: '#0A0A0A' }}>
           <ClientNav clientName="Dashboard" userEmail="" />
-          <main className="max-w-5xl mx-auto px-4 py-6">{children}</main>
+          <main style={{ maxWidth: '1100px', margin: '0 auto', padding: '28px 24px' }}>{children}</main>
         </div>
       </ClientGuard>
     </Suspense>

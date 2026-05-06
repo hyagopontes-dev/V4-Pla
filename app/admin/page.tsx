@@ -1,7 +1,7 @@
 import { createServerSupabase } from '@/lib/supabase-server'
-import ClientsListClient from '@/components/admin/ClientsListClient'
 import Link from 'next/link'
-import { Plus, Users, TrendingUp, Package } from 'lucide-react'
+import { Plus } from 'lucide-react'
+import ClientSearch from '@/components/admin/ClientSearch'
 
 export default async function AdminHome() {
   const supabase = await createServerSupabase()
@@ -10,55 +10,46 @@ export default async function AdminHome() {
   const totalClients = clients?.length ?? 0
   const activeClients = clients?.filter(c => c.active).length ?? 0
 
+  const stats = [
+    { label: 'Total de clientes', value: String(totalClients) },
+    { label: 'Clientes ativos', value: String(activeClients) },
+    { label: 'Clientes inativos', value: String(totalClients - activeClients) },
+  ]
+
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
+      {/* Header */}
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '40px' }}>
         <div>
-          <h1 className="text-2xl font-semibold text-gray-900">Painel Admin</h1>
-          <p className="text-gray-500 text-sm mt-0.5">Gerencie todos os seus clientes</p>
+          <div style={{ fontSize: '10px', letterSpacing: '0.2em', textTransform: 'uppercase', color: '#F5C518', fontWeight: 500, marginBottom: '8px' }}>
+            Painel
+          </div>
+          <h1 style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: '36px', letterSpacing: '0.05em', color: '#FAFAFA', lineHeight: 1 }}>
+            CENTRAL DE GESTÃO
+          </h1>
         </div>
-        <Link href="/admin/clients/new" className="btn-primary flex items-center gap-2">
-          <Plus size={16} /> Novo cliente
+        <Link href="/admin/clients/new" className="btn-primary">
+          <Plus size={14} /> Novo Cliente
         </Link>
       </div>
 
-      <div className="grid grid-cols-3 gap-4 mb-8">
-        <div className="card">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-red-50 rounded-lg flex items-center justify-center">
-              <Users size={20} className="text-red-600" />
-            </div>
-            <div>
-              <p className="text-xs text-gray-500">Total de clientes</p>
-              <p className="text-2xl font-semibold text-gray-900">{totalClients}</p>
-            </div>
+      {/* Stats */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '12px', marginBottom: '32px' }}>
+        {stats.map(({ label, value }) => (
+          <div key={label} className="card">
+            <div style={{ fontSize: '10px', letterSpacing: '0.15em', textTransform: 'uppercase', color: '#888', marginBottom: '8px' }}>{label}</div>
+            <div style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: '40px', letterSpacing: '0.04em', color: '#F5C518', lineHeight: 1 }}>{value}</div>
           </div>
-        </div>
-        <div className="card">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-green-50 rounded-lg flex items-center justify-center">
-              <TrendingUp size={20} className="text-green-700" />
-            </div>
-            <div>
-              <p className="text-xs text-gray-500">Clientes ativos</p>
-              <p className="text-2xl font-semibold text-gray-900">{activeClients}</p>
-            </div>
-          </div>
-        </div>
-        <div className="card">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center">
-              <Package size={20} className="text-blue-700" />
-            </div>
-            <div>
-              <p className="text-xs text-gray-500">Clientes inativos</p>
-              <p className="text-2xl font-semibold text-gray-900">{totalClients - activeClients}</p>
-            </div>
-          </div>
-        </div>
+        ))}
       </div>
 
-      <ClientsListClient clients={clients ?? []} />
+      {/* Clients table */}
+      <div className="card" style={{ padding: 0 }}>
+        <div style={{ padding: '16px 20px', borderBottom: '1px solid #2A2A2A', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ fontSize: '10px', letterSpacing: '0.2em', textTransform: 'uppercase', color: '#888', fontWeight: 500 }}>Clientes</div>
+        </div>
+        <ClientSearch clients={clients ?? []} />
+      </div>
     </div>
   )
 }

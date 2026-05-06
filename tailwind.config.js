@@ -9,13 +9,19 @@ module.exports = {
     extend: {
       colors: {
         brand: {
-          50:  '#fff1f1',
-          100: '#ffd7d7',
-          500: '#dc2626',
-          700: '#b91c1c',
-          900: '#7f1d1d',
-        }
-      }
+          DEFAULT: '#F5C518',
+          light: '#FFD740',
+          pale: '#FFF9E0',
+        },
+        black: { DEFAULT: '#0A0A0A', off: '#111111' },
+        dark: { DEFAULT: '#1A1A1A', mid: '#2C2C2C' },
+        border: '#2A2A2A',
+      },
+      fontFamily: {
+        display: ['Bebas Neue', 'sans-serif'],
+        sans: ['DM Sans', 'sans-serif'],
+      },
+      borderRadius: { DEFAULT: '2px', sm: '2px', md: '2px', lg: '4px' },
     },
   },
   plugins: [],

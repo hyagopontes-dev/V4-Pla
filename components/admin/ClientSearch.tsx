@@ -3,14 +3,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { Eye, Search, Plus, Users } from 'lucide-react'
 
-interface Client {
-  id: string
-  name: string
-  slug: string
-  contract_pieces: number
-  active: boolean
-}
-
+interface Client { id: string; name: string; slug: string; contract_pieces: number; active: boolean }
 interface Props { clients: Client[] }
 
 export default function ClientSearch({ clients }: Props) {
@@ -23,80 +16,74 @@ export default function ClientSearch({ clients }: Props) {
 
   return (
     <>
-      {/* Search bar */}
-      <div className="px-5 py-3 border-b border-gray-100">
-        <div className="relative">
-          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+      {/* Search */}
+      <div style={{ padding: '12px 16px', borderBottom: '1px solid #2A2A2A' }}>
+        <div style={{ position: 'relative' }}>
+          <Search size={13} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#888' }} />
           <input
             type="text"
-            placeholder="Buscar cliente por nome..."
+            placeholder="Buscar cliente..."
             value={query}
             onChange={e => setQuery(e.target.value)}
-            className="w-full pl-9 pr-4 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent bg-gray-50"
-            autoComplete="off"
+            style={{
+              width: '100%', background: '#1A1A1A', border: '1px solid #2A2A2A',
+              borderRadius: '2px', padding: '9px 12px 9px 36px',
+              fontSize: '12px', color: '#FAFAFA', fontFamily: "'DM Sans', sans-serif",
+              outline: 'none'
+            }}
           />
-          {query && (
-            <button onClick={() => setQuery('')}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 text-xs">
-              ✕
-            </button>
-          )}
         </div>
         {query && (
-          <p className="text-xs text-gray-400 mt-1.5">
+          <div style={{ fontSize: '11px', color: '#888', marginTop: '6px' }}>
             {filtered.length} resultado{filtered.length !== 1 ? 's' : ''} para "{query}"
-          </p>
+          </div>
         )}
       </div>
 
       {filtered.length === 0 ? (
-        <div className="p-12 text-center">
+        <div style={{ padding: '48px', textAlign: 'center' }}>
           {query ? (
             <>
-              <Search size={36} className="text-gray-300 mx-auto mb-3" />
-              <p className="text-gray-500 text-sm">Nenhum cliente encontrado para "{query}"</p>
-              <button onClick={() => setQuery('')} className="text-red-500 text-xs mt-2 hover:underline">Limpar busca</button>
+              <div style={{ fontSize: '13px', color: '#888', marginBottom: '8px' }}>Nenhum cliente encontrado para "{query}"</div>
+              <button onClick={() => setQuery('')} style={{ fontSize: '11px', color: '#F5C518', background: 'none', border: 'none', cursor: 'pointer' }}>Limpar busca</button>
             </>
           ) : (
             <>
-              <Users size={40} className="text-gray-300 mx-auto mb-3" />
-              <p className="text-gray-500 text-sm">Nenhum cliente cadastrado ainda.</p>
-              <Link href="/admin/clients/new" className="btn-primary inline-flex mt-4 items-center gap-2">
-                <Plus size={14} /> Adicionar primeiro cliente
-              </Link>
+              <div style={{ fontSize: '13px', color: '#888', marginBottom: '12px' }}>Nenhum cliente cadastrado.</div>
+              <Link href="/admin/clients/new" className="btn-primary"><Plus size={13} /> Adicionar cliente</Link>
             </>
           )}
         </div>
       ) : (
-        <table className="w-full text-sm">
+        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px' }}>
           <thead>
-            <tr className="border-b border-gray-100 bg-gray-50">
-              <th className="text-left px-5 py-3 text-xs font-medium text-gray-500">Cliente</th>
-              <th className="text-left px-5 py-3 text-xs font-medium text-gray-500">Slug</th>
-              <th className="text-left px-5 py-3 text-xs font-medium text-gray-500">Peças/mês</th>
-              <th className="text-left px-5 py-3 text-xs font-medium text-gray-500">Status</th>
-              <th className="px-5 py-3 text-xs font-medium text-gray-500 text-right">Ações</th>
+            <tr style={{ borderBottom: '1px solid #2A2A2A' }}>
+              {['Cliente', 'Slug', 'Peças/mês', 'Status', ''].map(h => (
+                <th key={h} style={{ padding: '10px 16px', textAlign: h === '' ? 'right' : 'left', fontSize: '10px', letterSpacing: '0.12em', textTransform: 'uppercase', color: '#888', fontWeight: 500 }}>{h}</th>
+              ))}
             </tr>
           </thead>
           <tbody>
             {filtered.map(client => (
-              <tr key={client.id} className="border-b border-gray-50 hover:bg-gray-50">
-                <td className="px-5 py-3 font-medium text-gray-900">{client.name}</td>
-                <td className="px-5 py-3 text-gray-500 font-mono text-xs">{client.slug}</td>
-                <td className="px-5 py-3 text-gray-700">{client.contract_pieces}</td>
-                <td className="px-5 py-3">
+              <tr key={client.id} style={{ borderBottom: '1px solid #1A1A1A' }}
+                onMouseEnter={e => (e.currentTarget.style.background = '#151515')}
+                onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
+                <td style={{ padding: '12px 16px', color: '#FAFAFA', fontWeight: 500 }}>{client.name}</td>
+                <td style={{ padding: '12px 16px', color: '#888', fontFamily: 'monospace', fontSize: '11px' }}>{client.slug}</td>
+                <td style={{ padding: '12px 16px', color: '#888' }}>{client.contract_pieces}</td>
+                <td style={{ padding: '12px 16px' }}>
                   {client.active
                     ? <span className="badge-success">Ativo</span>
                     : <span className="badge-neutral">Inativo</span>}
                 </td>
-                <td className="px-5 py-3">
-                  <div className="flex items-center gap-3 justify-end">
+                <td style={{ padding: '12px 16px', textAlign: 'right' }}>
+                  <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
                     <Link href={`/dashboard?client=${client.slug}`} target="_blank"
-                      className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-gray-800 border border-gray-200 hover:border-gray-400 px-3 py-1.5 rounded-lg transition-colors">
-                      <Eye size={13} /> Ver dashboard
+                      className="btn-ghost" style={{ padding: '6px 12px' }}>
+                      <Eye size={12} /> Ver
                     </Link>
                     <Link href={`/admin/clients/${client.id}`}
-                      className="text-red-600 hover:text-red-700 text-xs font-medium">
+                      style={{ fontSize: '11px', color: '#F5C518', textDecoration: 'none', padding: '6px 12px', letterSpacing: '0.05em', fontWeight: 500 }}>
                       Gerenciar →
                     </Link>
                   </div>

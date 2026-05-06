@@ -27,24 +27,42 @@ export default function ClientNav({ clientName, userEmail }: Props) {
   }
 
   return (
-    <header className="bg-black border-b border-white/10 sticky top-0 z-10">
-      <div className="max-w-5xl mx-auto px-4 h-14 flex items-center justify-between">
-        <div className="flex items-center gap-3">
+    <header style={{
+      background: '#111111', borderBottom: '1px solid #2A2A2A',
+      position: 'sticky', top: 0, zIndex: 10
+    }}>
+      <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '0 24px', height: '52px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
           {isAdmin && (
-            <Link href="/admin"
-              className="flex items-center gap-1.5 text-xs text-white/60 hover:text-white border border-white/20 hover:border-white/50 px-3 py-1.5 rounded-lg transition-colors mr-1">
-              <ArrowLeft size={13} /> Admin
+            <Link href="/admin" style={{
+              display: 'flex', alignItems: 'center', gap: '6px',
+              fontSize: '10px', letterSpacing: '0.12em', textTransform: 'uppercase',
+              color: 'rgba(250,250,250,0.4)', textDecoration: 'none',
+              padding: '5px 10px', border: '1px solid #2A2A2A', borderRadius: '2px',
+              transition: 'color 0.15s'
+            }}>
+              <ArrowLeft size={11} /> Admin
             </Link>
           )}
-          <div className="w-7 h-7 bg-red-600 rounded-lg flex items-center justify-center">
-            <span className="text-white font-bold text-xs">v4</span>
+          <div style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: '22px', letterSpacing: '0.08em', color: '#FAFAFA' }}>
+            AVH<span style={{ color: '#F5C518' }}>ANT</span>
           </div>
-          <span className="font-medium text-white text-sm">{clientName}</span>
+          {clientName && clientName !== 'Dashboard' && (
+            <>
+              <div style={{ width: '1px', height: '16px', background: '#2A2A2A' }} />
+              <span style={{ fontSize: '12px', color: 'rgba(250,250,250,0.5)', fontWeight: 300 }}>{clientName}</span>
+            </>
+          )}
         </div>
-        <div className="flex items-center gap-4">
-          <span className="text-xs text-white/40 hidden sm:block">{userEmail}</span>
-          <button onClick={logout} className="flex items-center gap-1.5 text-white/60 hover:text-white text-xs transition-colors">
-            <LogOut size={14} /> Sair
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          {userEmail && <span style={{ fontSize: '11px', color: '#888' }}>{userEmail}</span>}
+          <button onClick={logout} style={{
+            display: 'flex', alignItems: 'center', gap: '6px',
+            fontSize: '10px', letterSpacing: '0.12em', textTransform: 'uppercase',
+            color: 'rgba(250,250,250,0.3)', background: 'none', border: 'none',
+            cursor: 'pointer', transition: 'color 0.15s'
+          }}>
+            <LogOut size={12} /> Sair
           </button>
         </div>
       </div>
