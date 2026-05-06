@@ -77,7 +77,7 @@ export default function LoginPage() {
             fontSize: '52px', letterSpacing: '0.04em', lineHeight: 1,
             color: '#FAFAFA', marginBottom: '20px'
           }}>
-            CENTRAL DE<br />CONTROLE<br />DA AGÊNCIA
+            CLAREZA<br />PARA CRESCER<br />SEM LIMITE.
           </h1>
 
           <p style={{
