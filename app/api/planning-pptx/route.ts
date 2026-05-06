@@ -208,7 +208,7 @@ export async function GET(request: NextRequest) {
   const buffer = await pres.write({ outputType: 'nodebuffer' }) as Buffer
   const fileName = `Planejamento-${(clientName).replace(/\s+/g, '-')}.pptx`
 
-  return new NextResponse(buffer, {
+  return new NextResponse(new Uint8Array(buffer), {
     headers: {
       'Content-Type': 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
       'Content-Disposition': `attachment; filename="${fileName}"`,
