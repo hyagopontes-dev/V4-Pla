@@ -205,10 +205,10 @@ export async function GET(request: NextRequest) {
   fin.addText(clientName, { x: 0.85, y: 2.75, w: 7, h: 0.5, color: RED, fontSize: 15, bold: true })
   fin.addText('Planejamento Estratégico — Uso interno', { x: 0.85, y: 4.25, w: 7, h: 0.35, color: GRAY, fontSize: 10 })
 
-  const buffer = await pres.write({ outputType: 'nodebuffer' }) as Buffer
+  const buffer = await pres.write({ outputType: 'arraybuffer' }) as ArrayBuffer
   const fileName = `Planejamento-${(clientName).replace(/\s+/g, '-')}.pptx`
 
-  return new NextResponse(new Uint8Array(buffer), {
+  return new NextResponse(buffer, {
     headers: {
       'Content-Type': 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
       'Content-Disposition': `attachment; filename="${fileName}"`,

@@ -49,19 +49,19 @@ export default function DashboardClient({
 
   return (
     <div>
-      {/* HEADER — AVHANT style */}
-      <div style={{ background: '#111111', border: '1px solid #2A2A2A', borderRadius: '2px', marginBottom: '24px', overflow: 'hidden' }}>
+      {/* HEADER */}
+      <div className="card" style={{ padding: 0, marginBottom: '24px', overflow: 'hidden' }}>
         <div style={{ padding: '24px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '20px', flexWrap: 'wrap' }}>
-            <div style={{ width: '56px', height: '56px', border: '1px solid #2A2A2A', background: '#1A1A1A', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, overflow: 'hidden' }}>
+            <div style={{ width: '52px', height: '52px', border: '1px solid var(--border)', background: 'var(--bg-input)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, overflow: 'hidden' }}>
               {client.logo_url
                 ? <img src={client.logo_url} alt={client.name} style={{ width: '100%', height: '100%', objectFit: 'contain', padding: '4px' }} />
-                : <span style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: '24px', color: '#F5C518', letterSpacing: '0.05em' }}>{client.name.charAt(0)}</span>}
+                : <span style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: '22px', color: 'var(--yellow)', letterSpacing: '0.05em' }}>{client.name.charAt(0)}</span>}
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: '9px', letterSpacing: '0.2em', textTransform: 'uppercase', color: '#F5C518', fontWeight: 500, marginBottom: '4px' }}>Cliente</div>
-              <h1 style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: '28px', letterSpacing: '0.05em', color: '#FAFAFA', lineHeight: 1 }}>{client.name}</h1>
-              {client.about && <p style={{ fontSize: '12px', color: '#888', marginTop: '6px', lineHeight: 1.6, maxWidth: '600px', fontWeight: 300 }}>{client.about}</p>}
+              <div className="section-label" style={{ marginBottom: '4px' }}>Cliente</div>
+              <h1 style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: '26px', letterSpacing: '0.05em', color: 'var(--text)', lineHeight: 1 }}>{client.name}</h1>
+              {client.about && <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '6px', lineHeight: 1.6, maxWidth: '600px', fontWeight: 300 }}>{client.about}</p>}
               <div style={{ display: 'flex', gap: '8px', marginTop: '10px', flexWrap: 'wrap' }}>
                 <span className="badge-warning">{client.contract_pieces} peças/mês</span>
                 {client.active ? <span className="badge-success">Ativo</span> : <span className="badge-neutral">Inativo</span>}
@@ -70,14 +70,14 @@ export default function DashboardClient({
             </div>
           </div>
         </div>
-        <div style={{ display: 'flex', borderTop: '1px solid #2A2A2A' }}>
+        <div style={{ display: 'flex', borderTop: '1px solid var(--border)' }}>
           {TABS.map(t => (
             <button key={t.key} onClick={() => setTab(t.key)} style={{
-              flex: 1, padding: '12px', fontSize: '10px', fontWeight: 600,
+              flex: 1, padding: '11px', fontSize: '10px', fontWeight: 600,
               letterSpacing: '0.15em', textTransform: 'uppercase',
-              background: tab === t.key ? 'rgba(245,197,24,0.06)' : 'transparent',
-              color: tab === t.key ? '#F5C518' : 'rgba(250,250,250,0.35)',
-              border: 'none', borderBottom: tab === t.key ? '2px solid #F5C518' : '2px solid transparent',
+              background: tab === t.key ? 'var(--yellow-bg)' : 'transparent',
+              color: tab === t.key ? 'var(--yellow)' : 'var(--text-muted)',
+              border: 'none', borderBottom: tab === t.key ? '2px solid var(--yellow)' : '2px solid transparent',
               cursor: 'pointer', transition: 'all 0.15s'
             }}>
               {t.label}

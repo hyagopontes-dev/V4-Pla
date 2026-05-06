@@ -6,47 +6,41 @@ import ClientSearch from '@/components/admin/ClientSearch'
 export default async function AdminHome() {
   const supabase = await createServerSupabase()
   const { data: clients } = await supabase.from('clients').select('*').order('name')
-
-  const totalClients = clients?.length ?? 0
-  const activeClients = clients?.filter(c => c.active).length ?? 0
-
-  const stats = [
-    { label: 'Total de clientes', value: String(totalClients) },
-    { label: 'Clientes ativos', value: String(activeClients) },
-    { label: 'Clientes inativos', value: String(totalClients - activeClients) },
-  ]
+  const total = clients?.length ?? 0
+  const active = clients?.filter(c => c.active).length ?? 0
 
   return (
     <div>
-      {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '40px' }}>
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '36px' }}>
         <div>
-          <div style={{ fontSize: '10px', letterSpacing: '0.2em', textTransform: 'uppercase', color: '#F5C518', fontWeight: 500, marginBottom: '8px' }}>
-            Painel
-          </div>
-          <h1 style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: '36px', letterSpacing: '0.05em', color: '#FAFAFA', lineHeight: 1 }}>
+          <div className="section-label" style={{ marginBottom: '8px' }}>Painel</div>
+          <h1 style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: '34px', letterSpacing: '0.04em', color: 'var(--text)', lineHeight: 1 }}>
             CENTRAL DE GESTÃO
           </h1>
         </div>
         <Link href="/admin/clients/new" className="btn-primary">
-          <Plus size={14} /> Novo Cliente
+          <Plus size={13} /> Novo Cliente
         </Link>
       </div>
 
       {/* Stats */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '12px', marginBottom: '32px' }}>
-        {stats.map(({ label, value }) => (
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '12px', marginBottom: '28px' }}>
+        {[
+          { label: 'Total de clientes', value: String(total) },
+          { label: 'Clientes ativos', value: String(active) },
+          { label: 'Clientes inativos', value: String(total - active) },
+        ].map(({ label, value }) => (
           <div key={label} className="card">
-            <div style={{ fontSize: '10px', letterSpacing: '0.15em', textTransform: 'uppercase', color: '#888', marginBottom: '8px' }}>{label}</div>
-            <div style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: '40px', letterSpacing: '0.04em', color: '#F5C518', lineHeight: 1 }}>{value}</div>
+            <div style={{ fontSize: '10px', letterSpacing: '0.15em', textTransform: 'uppercase', color: 'var(--text-secondary)', marginBottom: '8px' }}>{label}</div>
+            <div style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: '40px', letterSpacing: '0.04em', color: 'var(--yellow)', lineHeight: 1 }}>{value}</div>
           </div>
         ))}
       </div>
 
-      {/* Clients table */}
+      {/* Table */}
       <div className="card" style={{ padding: 0 }}>
-        <div style={{ padding: '16px 20px', borderBottom: '1px solid #2A2A2A', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <div style={{ fontSize: '10px', letterSpacing: '0.2em', textTransform: 'uppercase', color: '#888', fontWeight: 500 }}>Clientes</div>
+        <div style={{ padding: '14px 20px', borderBottom: '1px solid var(--border)' }}>
+          <div className="section-label">Clientes</div>
         </div>
         <ClientSearch clients={clients ?? []} />
       </div>
