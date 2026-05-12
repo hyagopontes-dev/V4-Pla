@@ -1,37 +1,34 @@
 'use client'
-import { useState } from 'react'
-import { CommLog, MONTH_FULL, MONTH_NAMES } from '@/types'
+import { CommLog } from '@/types'
 import { MessageSquare } from 'lucide-react'
 
 interface Props { logs: CommLog[] }
 
 export default function CommLogView({ logs }: Props) {
-  const [activeId, setActiveId] = useState(logs[0]?.id ?? null)
   if (!logs.length) return null
-  const active = logs.find(l => l.id === activeId)
-
-  function linkify(text: string) {
-    const urlRegex = /(https?:\/\/[^\s]+)/g
-    return text.split(urlRegex).map((part, i) =>
-      urlRegex.test(part)
-        ? <a key={i} href={part} target="_blank" rel="noopener" className="text-blue-500 hover:underline break-all">{part}</a>
-        : part
-    )
-  }
+  const sorted = [...logs].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
 
   return (
-    <div className="bg-transparent rounded-xl border border-gray-200 className="text-blue-500" />
-        <h2 className="font-medium text-gray-900 onClick={() => setActiveId(l.id)}
-              className={`w-full text-left px-3 py-2.5 text-xs border-b border-gray-100" style={{borderColor:"var(--border)" ${activeId === l.id ? 'bg-transparent font-medium text-gray-900" style={{color:"var(--text)"' : 'text-gray-500" style={{color:"var(--text-secondary)" hover:bg-transparent'}`}>
-              {MONTH_NAMES[l.month - 1]} {l.year}
-            </button>
-          ))}
-        </div>
-        <div className="flex-1 p-5">
-          {active?.content
-            ? <p className="text-sm text-gray-700</p>
-            : <p className="text-gray-400
-        </div>
+    <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
+      <div style={{ padding: '14px 20px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <MessageSquare size={15} style={{ color: 'var(--yellow)' }} />
+        <h2 style={{ fontWeight: 500, color: 'var(--text)', fontSize: '14px' }}>Comunicados</h2>
+      </div>
+      <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+        {sorted.map(log => (
+          <div key={log.id} style={{
+            padding: '12px 14px', background: 'var(--bg-hover)',
+            border: '1px solid var(--border)', borderRadius: '2px'
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+              <span style={{ fontSize: '10px', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--yellow)', fontWeight: 600 }}>{log.type}</span>
+              <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
+                {new Date(log.created_at).toLocaleDateString('pt-BR')}
+              </span>
+            </div>
+            <p style={{ fontSize: '13px', color: 'var(--text)', lineHeight: 1.6 }}>{log.message}</p>
+          </div>
+        ))}
       </div>
     </div>
   )

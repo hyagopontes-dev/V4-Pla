@@ -12,9 +12,9 @@ function uniqueSortedMonths(items: OtherDeliverable[]): string[] {
 }
 
 const STATUS = {
-  pendente:  { label: 'Pendente',  bg: 'bg-transparent',  text: 'text-gray-600" style={{color:"var(--text-secondary)"' },
-  entregue:  { label: 'Entregue',  bg: 'bg-blue-100',  text: 'text-blue-700' },
-  concluido: { label: 'Concluído', bg: 'bg-green-100', text: 'text-green-700' },
+  pendente:  { label: 'Pendente',  cls: 'badge-neutral' },
+  entregue:  { label: 'Entregue',  cls: 'badge-warning' },
+  concluido: { label: 'Concluído', cls: 'badge-success' },
 }
 
 export default function OtherDeliverableView({ items }: Props) {
@@ -25,34 +25,63 @@ export default function OtherDeliverableView({ items }: Props) {
   const filtered = items.filter(i => `${i.year}-${i.month}` === cur)
 
   return (
-    <div className="bg-transparent rounded-xl border border-gray-200 className="text-red-500" />
-        <h2 className="font-medium text-gray-900 onClick={() => setCur(mk)}
-              className={`text-xs px-3 py-1.5 rounded-full border font-medium transition-colors ${cur === mk ? 'bg-gray-900 text-white border-gray-900' : 'border-gray-200" style={{borderColor:"var(--border)" text-gray-500" style={{color:"var(--text-secondary)" hover:bg-transparent'}`}>
+    <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
+      <div style={{ padding: '14px 20px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <Package size={15} style={{ color: 'var(--yellow)' }} />
+        <h2 style={{ fontWeight: 500, color: 'var(--text)', fontSize: '14px' }}>Outras Entregas</h2>
+      </div>
+
+      {/* Month selector */}
+      <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--border)', display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+        {months.map(mk => {
+          const [y, m] = mk.split('-').map(Number)
+          const active = cur === mk
+          return (
+            <button key={mk} onClick={() => setCur(mk)}
+              style={{
+                fontSize: '11px', padding: '4px 12px', borderRadius: '2px',
+                border: `1px solid ${active ? 'var(--yellow)' : 'var(--border)'}`,
+                background: active ? 'var(--yellow-bg)' : 'transparent',
+                color: active ? 'var(--yellow)' : 'var(--text-secondary)',
+                cursor: 'pointer', fontWeight: active ? 600 : 400,
+                letterSpacing: '0.05em', transition: 'all 0.15s'
+              }}>
               {MONTH_NAMES[m - 1]} {y}
             </button>
           )
         })}
       </div>
-      <div className="divide-y divide-gray-50">
+
+      <div style={{ padding: '16px' }}>
         {filtered.length === 0 ? (
-          <p className="text-gray-400 className="px-5 py-4">
-              <div className="flex items-start justify-between gap-3">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1.5">
-                    <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${s.bg} ${s.text}`}>{s.label}</span>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '13px', textAlign: 'center', padding: '24px 0' }}>
+            Nenhuma entrega neste mês.
+          </p>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            {filtered.map(item => {
+              const s = STATUS[item.status as keyof typeof STATUS] ?? STATUS.pendente
+              return (
+                <div key={item.id} style={{
+                  display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between',
+                  padding: '12px 14px', background: 'var(--bg-hover)',
+                  border: '1px solid var(--border)', borderRadius: '2px', gap: '12px'
+                }}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <p style={{ fontSize: '13px', color: 'var(--text)', fontWeight: 500, marginBottom: '2px' }}>{item.name}</p>
+                    {item.doc_url && (
+                      <a href={item.doc_url} target="_blank" rel="noopener"
+                        style={{ fontSize: '11px', color: 'var(--yellow)', display: 'inline-flex', alignItems: 'center', gap: '4px', textDecoration: 'none' }}>
+                        <ExternalLink size={11} /> Ver documento
+                      </a>
+                    )}
                   </div>
-                  <p className="text-sm text-gray-800 leading-relaxed">{item.description}</p>
+                  <span className={s.cls}>{s.label}</span>
                 </div>
-                {item.doc_url && (
-                  <a href={item.doc_url} target="_blank" rel="noopener"
-                    className="flex items-center gap-1.5 text-xs text-red-500 hover:text-red-700 flex-shrink-0 border border-red-200 hover:border-red-400 px-3 py-1.5 rounded-lg transition-colors">
-                    <ExternalLink size={11} /> Ver documento
-                  </a>
-                )}
-              </div>
-            </div>
-          )
-        })}
+              )
+            })}
+          </div>
+        )}
       </div>
     </div>
   )

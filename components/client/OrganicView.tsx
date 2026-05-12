@@ -1,77 +1,49 @@
 'use client'
-import { useState, useEffect } from 'react'
-import { OrganicAnalysis, MONTH_FULL } from '@/types'
-import { Instagram, ExternalLink } from 'lucide-react'
+import { OrganicAnalysis } from '@/types'
+import { BarChart2 } from 'lucide-react'
 
 interface Props { analyses: OrganicAnalysis[] }
 
-function uniqueSortedMonths(items: OrganicAnalysis[]): string[] {
-  const seen: Record<string, boolean> = {}
-  items.forEach(m => { seen[`${m.year}-${m.month}`] = true })
-  return Object.keys(seen).sort().reverse()
-}
-
-function getInstagramEmbedUrl(url: string): string | null {
-  if (!url) return null
-  // Match reel or post URL
-  const match = url.match(/instagram\.com\/(p|reel|reels)\/([A-Za-z0-9_-]+)/)
-  if (!match) return null
-  return `https://www.instagram.com/${match[1]}/${match[2]}/embed/`
-}
-
-function InstagramEmbed({ url }: { url: string }) {
-  const embedUrl = getInstagramEmbedUrl(url)
-  if (!embedUrl) {
-    return (
-      <a href={url} target="_blank" rel="noopener"
-        className="flex items-center gap-2 text-sm text-pink-500 hover:text-pink-700">
-        <ExternalLink size={14} /> Ver vídeo
-      </a>
-    )
-  }
-  return (
-    <div className="w-full flex justify-center">
-      <iframe
-        src={embedUrl}
-        width="320"
-        height="440"
-        frameBorder="0"
-        scrolling="no"
-        allowTransparency
-        className="rounded-xl border border-gray-200
-
 export default function OrganicView({ analyses }: Props) {
-  const months = uniqueSortedMonths(analyses)
-  const [curMonth, setCurMonth] = useState(months[0] ?? '')
   if (!analyses.length) return null
+  const sorted = [...analyses].sort((a, b) => {
+    if (a.year !== b.year) return b.year - a.year
+    return b.month - a.month
+  })
+  const latest = sorted[0]
 
-  const filtered = analyses.filter(a => `${a.year}-${a.month}` === curMonth)
+  const metrics = [
+    { label: 'Alcance', value: latest.reach },
+    { label: 'Impressões', value: latest.impressions },
+    { label: 'Seguidores', value: latest.followers },
+    { label: 'Engajamento', value: latest.engagement_rate ? `${latest.engagement_rate}%` : null },
+    { label: 'Salvamentos', value: latest.saves },
+    { label: 'Compartilhamentos', value: latest.shares },
+  ].filter(m => m.value !== null && m.value !== undefined)
 
   return (
-    <div className="bg-transparent rounded-xl border border-gray-200 className="text-pink-500" />
-        <h2 className="font-medium text-gray-900 onClick={() => setCurMonth(mk)}
-              className={`text-xs px-3 py-1.5 rounded-full border font-medium transition-colors ${curMonth === mk ? 'bg-gray-900 text-white border-gray-900' : 'border-gray-200" style={{borderColor:"var(--border)" text-gray-500" style={{color:"var(--text-secondary)" hover:bg-transparent'}`}>
-              {MONTH_FULL[m - 1].slice(0, 3)} {y}
-            </button>
-          )
-        })}
+    <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
+      <div style={{ padding: '14px 20px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <BarChart2 size={15} style={{ color: 'var(--yellow)' }} />
+        <h2 style={{ fontWeight: 500, color: 'var(--text)', fontSize: '14px' }}>Análise Orgânica</h2>
       </div>
-
-      <div className="divide-y divide-gray-50">
-        {filtered.length === 0 ? (
-          <p className="text-gray-400 className="p-5">
-              <p className="text-xs font-medium text-gray-400</p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 items-start">
-                {a.video_url && <InstagramEmbed url={a.video_url} />}
-                {a.analysis && (
-                  <div>
-                    <p className="text-xs font-medium text-gray-500</p>
-                  </div>
-                )}
+      <div style={{ padding: '16px' }}>
+        {latest.notes && (
+          <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '16px', lineHeight: 1.6 }}>{latest.notes}</p>
+        )}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
+          {metrics.map(({ label, value }) => (
+            <div key={label} style={{
+              padding: '12px', background: 'var(--bg-hover)',
+              border: '1px solid var(--border)', borderRadius: '2px', textAlign: 'center'
+            }}>
+              <div style={{ fontSize: '10px', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--text-secondary)', marginBottom: '6px' }}>{label}</div>
+              <div style={{ fontSize: '20px', fontFamily: "'Bebas Neue', sans-serif", letterSpacing: '0.04em', color: 'var(--yellow)' }}>
+                {typeof value === 'number' ? value.toLocaleString('pt-BR') : value}
               </div>
             </div>
-          ))
-        )}
+          ))}
+        </div>
       </div>
     </div>
   )
