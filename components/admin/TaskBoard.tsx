@@ -66,6 +66,16 @@ function PDCAStepper({ value, onChange }: { value: Task['pdca']; onChange: (v: T
 
 function RichEditor({ value, onChange, placeholder = 'Descrição...' }: { value: string; onChange: (v: string) => void; placeholder?: string }) {
   const ref = React.useRef<HTMLDivElement>(null)
+  const initialized = React.useRef(false)
+
+  // Only set innerHTML on first mount — never on re-renders (prevents cursor jumping)
+  React.useEffect(() => {
+    if (ref.current && !initialized.current) {
+      ref.current.innerHTML = value || ''
+      initialized.current = true
+    }
+  }, [])
+
   const btnBase: React.CSSProperties = {
     display: 'flex', alignItems: 'center', justifyContent: 'center',
     width: '26px', height: '26px', borderRadius: '2px',
@@ -84,9 +94,11 @@ function RichEditor({ value, onChange, placeholder = 'Descrição...' }: { value
         <button type="button" onMouseDown={e => { e.preventDefault(); exec('italic') }} style={btnBase} title="Itálico"><Italic size={12} /></button>
         <button type="button" onMouseDown={e => { e.preventDefault(); exec('insertUnorderedList') }} style={btnBase} title="Lista"><List size={12} /></button>
       </div>
-      <div ref={ref} contentEditable suppressContentEditableWarning
+      <div
+        ref={ref}
+        contentEditable
+        suppressContentEditableWarning
         onInput={() => { if (ref.current) onChange(ref.current.innerHTML) }}
-        dangerouslySetInnerHTML={{ __html: value || '' }}
         data-placeholder={placeholder}
         style={{ minHeight: '80px', padding: '10px 12px', background: 'var(--bg-input)', color: 'var(--text)', fontSize: '12px', lineHeight: 1.7, outline: 'none', fontFamily: "'DM Sans', sans-serif" }}
       />

@@ -1,5 +1,5 @@
 'use client'
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { createClient } from '@/lib/supabase'
 import { CommLog, MONTH_FULL } from '@/types'
 import { Save, Plus, Bold, Italic, List, Link2, AlignLeft } from 'lucide-react'
@@ -11,6 +11,14 @@ const YEARS = [CURRENT_YEAR - 1, CURRENT_YEAR, CURRENT_YEAR + 1]
 
 function RichEditor({ value, onChange }: { value: string; onChange: (v: string) => void }) {
   const editorRef = useRef<HTMLDivElement>(null)
+  const initialized = useRef(false)
+
+  useEffect(() => {
+    if (editorRef.current && !initialized.current) {
+      editorRef.current.innerHTML = value || ''
+      initialized.current = true
+    }
+  }, [])
 
   function exec(cmd: string, val?: string) {
     editorRef.current?.focus()
@@ -66,7 +74,6 @@ function RichEditor({ value, onChange }: { value: string; onChange: (v: string) 
         contentEditable
         suppressContentEditableWarning
         onInput={() => { if (editorRef.current) onChange(editorRef.current.innerHTML) }}
-        dangerouslySetInnerHTML={{ __html: value || '' }}
         data-placeholder="Registre conversas, reuniões, decisões importantes..."
         style={{
           minHeight: '200px', padding: '14px 16px',
