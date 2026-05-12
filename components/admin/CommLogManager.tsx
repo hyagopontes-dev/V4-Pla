@@ -1,5 +1,5 @@
 'use client'
-import { useState, useRef } from 'react'
+import { useState, useRef, useCallback } from 'react'
 import { createClient } from '@/lib/supabase'
 import { CommLog, MONTH_FULL } from '@/types'
 import { Save, Plus, Bold, Italic, List, Link2, AlignLeft } from 'lucide-react'
@@ -18,6 +18,10 @@ function RichEditor({ value, onChange }: { value: string; onChange: (v: string) 
     if (editorRef.current) onChange(editorRef.current.innerHTML)
   }
 
+  function handleInput() {
+    if (editorRef.current) onChange(editorRef.current.innerHTML)
+  }
+
   function handleLink() {
     const url = prompt('Cole a URL do link:')
     if (url) exec('createLink', url)
@@ -30,54 +34,69 @@ function RichEditor({ value, onChange }: { value: string; onChange: (v: string) 
     { icon: AlignLeft, cmd: 'formatBlock', val: '<p>', title: 'Parágrafo' },
   ]
 
-  const btnBase: React.CSSProperties = {
-    display: 'flex', alignItems: 'center', justifyContent: 'center',
-    width: '28px', height: '28px', borderRadius: '2px',
-    border: '1px solid transparent', background: 'transparent',
-    color: 'var(--text-secondary)', cursor: 'pointer',
-  }
-
   return (
     <div style={{ border: '1px solid var(--border)', borderRadius: '2px', overflow: 'hidden' }}>
+      {/* Toolbar */}
       <div style={{
         display: 'flex', alignItems: 'center', gap: '2px',
         padding: '6px 10px', borderBottom: '1px solid var(--border)',
         background: 'var(--bg-hover)', flexWrap: 'wrap'
       }}>
         {tools.map(({ icon: Icon, cmd, val, title }) => (
-          <button key={cmd} title={title} type="button"
+          <button key={cmd} title={title}
             onMouseDown={e => { e.preventDefault(); exec(cmd, val) }}
-            style={btnBase}>
+            style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              width: '28px', height: '28px', borderRadius: '2px',
+              border: '1px solid transparent', background: 'transparent',
+              color: 'var(--text-secondary)', cursor: 'pointer', transition: 'all 0.1s'
+            }}
+            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'var(--bg-input)'; (e.currentTarget as HTMLElement).style.borderColor = 'var(--border)'; (e.currentTarget as HTMLElement).style.color = 'var(--text)' }}
+            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.borderColor = 'transparent'; (e.currentTarget as HTMLElement).style.color = 'var(--text-secondary)' }}
+          >
             <Icon size={14} />
           </button>
         ))}
         <div style={{ width: '1px', height: '20px', background: 'var(--border)', margin: '0 4px' }} />
-        <button type="button" title="Inserir link"
+        <button title="Inserir link"
           onMouseDown={e => { e.preventDefault(); handleLink() }}
-          style={btnBase}>
+          style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            width: '28px', height: '28px', borderRadius: '2px',
+            border: '1px solid transparent', background: 'transparent',
+            color: 'var(--text-secondary)', cursor: 'pointer'
+          }}>
           <Link2 size={14} />
         </button>
         <span style={{ marginLeft: 'auto', fontSize: '10px', color: 'var(--text-muted)', letterSpacing: '0.05em' }}>
-          Ctrl+B = negrito · Enter = parágrafo
+          Ctrl+B = negrito · Enter = novo parágrafo
         </span>
       </div>
+
+      {/* Editor area */}
       <div
         ref={editorRef}
         contentEditable
         suppressContentEditableWarning
-        onInput={() => { if (editorRef.current) onChange(editorRef.current.innerHTML) }}
+        onInput={handleInput}
         dangerouslySetInnerHTML={{ __html: value || '' }}
-        data-placeholder="Registre conversas, reuniões, decisões importantes..."
         style={{
           minHeight: '200px', padding: '14px 16px',
           background: 'var(--bg-input)', color: 'var(--text)',
           fontSize: '13px', lineHeight: 1.8, outline: 'none',
           fontFamily: "'DM Sans', sans-serif",
         }}
+        data-placeholder="Registre conversas, reuniões, decisões importantes..."
       />
+
       <style>{`
-        [contenteditable]:empty:before { content: attr(data-placeholder); color: var(--text-secondary); opacity: 0.5; pointer-events: none; }
-        [contenteditable] b, [contenteditable] strong { font-weight: 700; }
+        [contenteditable]:empty:before {
+          content: attr(data-placeholder);
+          color: var(--text-secondary);
+          opacity: 0.5;
+          pointer-events: none;
+        }
+        [contenteditable] b, [contenteditable] strong { font-weight: 700; color: var(--text); }
         [contenteditable] i, [contenteditable] em { font-style: italic; }
         [contenteditable] ul { padding-left: 20px; margin: 8px 0; }
         [contenteditable] li { margin: 4px 0; }
@@ -111,21 +130,12 @@ export default function CommLogManager({ clientId, logs: initial }: Props) {
     setSaving(null)
   }
 
+  function updateContent(id: string, content: string) {
+    setLogs(prev => prev.map(l => l.id === id ? { ...l, content } : l))
+  }
+
   const sorted = [...logs].sort((a, b) => a.year !== b.year ? b.year - a.year : b.month - a.month)
   const active = sorted.find(l => l.id === activeId)
-
-  const tabStyle = (isActive: boolean): React.CSSProperties => ({
-    width: '100%', textAlign: 'left', padding: '10px 14px',
-    fontSize: '12px', fontWeight: isActive ? 600 : 400,
-    background: isActive ? 'var(--bg-card)' : 'transparent',
-    color: isActive ? 'var(--yellow)' : 'var(--text-secondary)',
-    cursor: 'pointer',
-    borderTop: 'none', borderRight: 'none',
-    borderBottom: '1px solid var(--border)',
-    borderLeft: isActive ? '2px solid var(--yellow)' : '2px solid transparent',
-    transition: 'all 0.15s',
-    fontFamily: "'DM Sans', sans-serif",
-  })
 
   return (
     <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
@@ -137,7 +147,7 @@ export default function CommLogManager({ clientId, logs: initial }: Props) {
       </div>
 
       {showForm && (
-        <div style={{ padding: '14px 20px', borderBottom: '1px solid var(--border)', background: 'var(--bg-hover)', display: 'flex', alignItems: 'flex-end', gap: '12px', flexWrap: 'wrap' }}>
+        <div style={{ padding: '14px 20px', borderBottom: '1px solid var(--border)', background: 'var(--bg-hover)', display: 'flex', alignItems: 'flex-end', gap: '12px' }}>
           <div>
             <label className="label">Mês</label>
             <select className="input" value={form.month} onChange={e => setForm(f => ({ ...f, month: e.target.value }))}>
@@ -159,7 +169,17 @@ export default function CommLogManager({ clientId, logs: initial }: Props) {
         {sorted.length > 0 && (
           <div style={{ width: '120px', borderRight: '1px solid var(--border)', flexShrink: 0, background: 'var(--bg-hover)' }}>
             {sorted.map(l => (
-              <button key={l.id} onClick={() => setActiveId(l.id)} style={tabStyle(activeId === l.id)}>
+              <button key={l.id} onClick={() => setActiveId(l.id)} style={{
+                width: '100%', textAlign: 'left', padding: '10px 14px',
+                fontSize: '12px', borderBottom: '1px solid var(--border)',
+                background: activeId === l.id ? 'var(--bg-card)' : 'transparent',
+                color: activeId === l.id ? 'var(--yellow)' : 'var(--text-secondary)',
+                fontWeight: activeId === l.id ? 600 : 400,
+                cursor: 'pointer', transition: 'all 0.15s',
+                borderTop: 'none', borderRight: 'none',
+                borderBottom: '1px solid var(--border)',
+                borderLeft: activeId === l.id ? '2px solid var(--yellow)' : '2px solid transparent',
+              }}>
                 {MONTH_FULL[l.month - 1].slice(0, 3)} {l.year}
               </button>
             ))}
@@ -178,7 +198,7 @@ export default function CommLogManager({ clientId, logs: initial }: Props) {
               </p>
               <RichEditor
                 value={active.content ?? ''}
-                onChange={v => setLogs(prev => prev.map(l => l.id === active.id ? { ...l, content: v } : l))}
+                onChange={v => updateContent(active.id, v)}
               />
               <button onClick={() => saveLog(active)} className="btn-primary" style={{ padding: '8px 20px', fontSize: '11px', alignSelf: 'flex-start' }}>
                 <Save size={13} /> {saving === active.id ? 'Salvando...' : 'Salvar'}
