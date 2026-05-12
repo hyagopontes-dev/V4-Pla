@@ -90,8 +90,7 @@ export default function DashboardClient({
       <div className="space-y-6">
         {tab === 'entregas' && (
           <>
-            <DeliverableView deliverables={deliverables} contractPieces={client.contract_pieces} />
-            <OtherDeliverableView items={otherDeliverables} />
+            <DeliverableView deliverables={deliverables} contractPieces={client.contract_pieces} otherDeliverables={otherDeliverables} />
             {blockers.length > 0 && <BlockerView blockers={blockers} />}
             {highlights.length > 0 && <HighlightView highlights={highlights} />}
             <CommLogView logs={commLogs} />
