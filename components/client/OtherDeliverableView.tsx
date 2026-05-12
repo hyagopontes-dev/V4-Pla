@@ -68,7 +68,7 @@ export default function OtherDeliverableView({ items }: Props) {
                   border: '1px solid var(--border)', borderRadius: '2px', gap: '12px'
                 }}>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <p style={{ fontSize: '13px', color: 'var(--text)', fontWeight: 500, marginBottom: '2px' }}>{item.name}</p>
+                    <p style={{ fontSize: '13px', color: 'var(--text)', fontWeight: 500, marginBottom: '2px' }}>{item.description}</p>
                     {item.doc_url && (
                       <a href={item.doc_url} target="_blank" rel="noopener"
                         style={{ fontSize: '11px', color: 'var(--yellow)', display: 'inline-flex', alignItems: 'center', gap: '4px', textDecoration: 'none' }}>
