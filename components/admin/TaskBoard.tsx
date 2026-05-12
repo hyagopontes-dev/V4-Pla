@@ -121,7 +121,7 @@ function TaskCard({ task, clientName, onUpdate, onDelete }: {
       {editing ? (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
           <input className="input" style={{ fontSize: '13px' }} value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} />
-          <textarea className="input" style={{ fontSize: '12px', minHeight: '60px', resize: 'vertical' }} placeholder="Descrição (opcional)" value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} />
+          <RichEditor value={form.description} onChange={v => setForm(f => ({ ...f, description: v }))} placeholder="Descrição (opcional)..." />
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px' }}>
             <div>
               <label className="label">Responsável</label>
