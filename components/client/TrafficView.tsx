@@ -52,16 +52,16 @@ export default function TrafficView({ metrics }: Props) {
 
   if (!metrics.length) {
     return (
-      <div className="bg-white rounded-xl border border-gray-200 p-8 text-center">
-        <p className="text-gray-400 text-sm">Nenhuma métrica de tráfego registrada ainda.</p>
+      <div className="bg-transparent rounded-xl border border-gray-200" style={{borderColor:"var(--border)" p-8 text-center">
+        <p className="text-gray-400" style={{color:"var(--text-secondary)" text-sm">Nenhuma métrica de tráfego registrada ainda.</p>
       </div>
     )
   }
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-      <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between flex-wrap gap-3">
-        <h2 className="font-medium text-gray-900">Tráfego pago</h2>
+    <div className="bg-transparent rounded-xl border border-gray-200" style={{borderColor:"var(--border)" overflow-hidden">
+      <div className="px-5 py-4 border-b border-gray-100" style={{borderColor:"var(--border)" flex items-center justify-between flex-wrap gap-3">
+        <h2 className="font-medium text-gray-900" style={{color:"var(--text)"">Tráfego pago</h2>
         <div className="flex gap-2">
           {platforms.map(p => (
             <button
@@ -72,7 +72,7 @@ export default function TrafficView({ metrics }: Props) {
                 const newMonths = uniqueSortedMonths(newFiltered)
                 setCurMonth(newMonths[0] ?? '')
               }}
-              className={`text-xs px-3 py-1.5 rounded-full border transition-colors font-medium ${platform === p ? 'bg-gray-900 text-white border-gray-900' : 'border-gray-200 text-gray-500 hover:bg-gray-50'}`}
+              className={`text-xs px-3 py-1.5 rounded-full border transition-colors font-medium ${platform === p ? 'bg-gray-900 text-white border-gray-900' : 'border-gray-200" style={{borderColor:"var(--border)" text-gray-500" style={{color:"var(--text-secondary)" hover:bg-transparent'}`}
             >
               {p === 'meta' ? 'Meta Ads' : 'Google Ads'}
             </button>
@@ -91,7 +91,7 @@ export default function TrafficView({ metrics }: Props) {
                 <button
                   key={mk}
                   onClick={() => setCurMonth(mk)}
-                  className={`text-xs px-3 py-1.5 rounded-full border transition-colors font-medium ${curMonth === mk ? 'bg-gray-900 text-white border-gray-900' : 'border-gray-200 text-gray-500 hover:bg-gray-50'}`}
+                  className={`text-xs px-3 py-1.5 rounded-full border transition-colors font-medium ${curMonth === mk ? 'bg-gray-900 text-white border-gray-900' : 'border-gray-200" style={{borderColor:"var(--border)" text-gray-500" style={{color:"var(--text-secondary)" hover:bg-transparent'}`}
                 >
                   {MONTH_NAMES[m - 1]} {y}
                 </button>
@@ -101,7 +101,7 @@ export default function TrafficView({ metrics }: Props) {
         )}
 
         {!current ? (
-          <p className="text-gray-400 text-sm text-center py-6">Selecione um período para ver as métricas.</p>
+          <p className="text-gray-400" style={{color:"var(--text-secondary)" text-sm text-center py-6">Selecione um período para ver as métricas.</p>
         ) : (
           <>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
@@ -112,9 +112,9 @@ export default function TrafficView({ metrics }: Props) {
                 const p = pctCalc(meta, real, f.inv)
                 const color = p == null ? '#9ca3af' : p >= 1 ? '#639922' : p >= 0.8 ? '#d97706' : '#ef4444'
                 return (
-                  <div key={key} className="bg-gray-50 rounded-xl p-3">
-                    <p className="text-xs text-gray-500 mb-1">{f.label}</p>
-                    <p className="text-xl font-semibold text-gray-900">{fmt(real, f.isPct, f.isCurrency)}</p>
+                  <div key={key} className="bg-transparent rounded-xl p-3">
+                    <p className="text-xs text-gray-500" style={{color:"var(--text-secondary)" mb-1">{f.label}</p>
+                    <p className="text-xl font-semibold text-gray-900" style={{color:"var(--text)"">{fmt(real, f.isPct, f.isCurrency)}</p>
                     <p className="text-xs mt-1" style={{ color }}>
                       meta: {fmt(meta, f.isPct, f.isCurrency)} {p != null ? `· ${Math.round(p * 100)}%` : ''}
                     </p>
@@ -126,12 +126,12 @@ export default function TrafficView({ metrics }: Props) {
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-gray-100">
-                    <th className="text-left py-2 text-xs text-gray-500 font-medium">Métrica</th>
-                    <th className="text-right py-2 text-xs text-gray-500 font-medium">Meta</th>
-                    <th className="text-right py-2 text-xs text-gray-500 font-medium">Realizado</th>
-                    <th className="text-center py-2 text-xs text-gray-500 font-medium w-28">Atingimento</th>
-                    <th className="text-center py-2 text-xs text-gray-500 font-medium">Status</th>
+                  <tr className="border-b border-gray-100" style={{borderColor:"var(--border)"">
+                    <th className="text-left py-2 text-xs text-gray-500" style={{color:"var(--text-secondary)" font-medium">Métrica</th>
+                    <th className="text-right py-2 text-xs text-gray-500" style={{color:"var(--text-secondary)" font-medium">Meta</th>
+                    <th className="text-right py-2 text-xs text-gray-500" style={{color:"var(--text-secondary)" font-medium">Realizado</th>
+                    <th className="text-center py-2 text-xs text-gray-500" style={{color:"var(--text-secondary)" font-medium w-28">Atingimento</th>
+                    <th className="text-center py-2 text-xs text-gray-500" style={{color:"var(--text-secondary)" font-medium">Status</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -142,16 +142,16 @@ export default function TrafficView({ metrics }: Props) {
                     const barColor = p == null ? '#e5e7eb' : p >= 1 ? '#639922' : p >= 0.8 ? '#d97706' : '#ef4444'
                     const barW = p != null ? Math.min(Math.round(p * 100), 100) : 0
                     return (
-                      <tr key={f.key} className="border-b border-gray-50 hover:bg-gray-50">
-                        <td className="py-2.5 text-gray-700 font-medium">{f.label}</td>
-                        <td className="py-2.5 text-right text-gray-500">{fmt(meta, f.isPct, f.isCurrency)}</td>
-                        <td className="py-2.5 text-right font-medium text-gray-900">{fmt(real, f.isPct, f.isCurrency)}</td>
+                      <tr key={f.key} className="border-b border-gray-50 hover:bg-transparent">
+                        <td className="py-2.5 text-gray-700" style={{color:"var(--text)" font-medium">{f.label}</td>
+                        <td className="py-2.5 text-right text-gray-500" style={{color:"var(--text-secondary)"">{fmt(meta, f.isPct, f.isCurrency)}</td>
+                        <td className="py-2.5 text-right font-medium text-gray-900" style={{color:"var(--text)"">{fmt(real, f.isPct, f.isCurrency)}</td>
                         <td className="py-2.5 px-3">
                           <div className="flex items-center gap-2">
-                            <div className="flex-1 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                            <div className="flex-1 h-1.5 bg-transparent rounded-full overflow-hidden">
                               <div className="h-full rounded-full" style={{ width: `${barW}%`, background: barColor }} />
                             </div>
-                            <span className="text-xs text-gray-500 w-8 text-right">{p != null ? Math.round(p * 100) + '%' : '—'}</span>
+                            <span className="text-xs text-gray-500" style={{color:"var(--text-secondary)" w-8 text-right">{p != null ? Math.round(p * 100) + '%' : '—'}</span>
                           </div>
                         </td>
                         <td className="py-2.5 text-center"><StatusBadge p={p} /></td>

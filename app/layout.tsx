@@ -2,8 +2,8 @@ import type { Metadata } from 'next'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'Pharma SaaS — Gestão de Clientes',
-  description: 'Plataforma de acompanhamento de entregas e métricas',
+  title: 'AVHANT',
+  description: 'Gestão que liberta quem cria',
 }
 
 const themeScript = `

@@ -200,3 +200,20 @@
   .section-label { font-size: 10px; font-weight: 500; letter-spacing: 0.2em; text-transform: uppercase; color: var(--yellow); }
   .accent-line { height: 1px; background: var(--yellow); width: 32px; }
 }
+
+
+/* ── Tailwind class overrides for theming ── */
+.bg-white { background-color: var(--bg-card) !important; }
+.bg-gray-50 { background-color: var(--bg-hover) !important; }
+.bg-gray-100 { background-color: var(--bg-input) !important; }
+.border-gray-100 { border-color: var(--border) !important; }
+.border-gray-200 { border-color: var(--border) !important; }
+.text-gray-900 { color: var(--text) !important; }
+.text-gray-800 { color: var(--text) !important; }
+.text-gray-700 { color: var(--text) !important; }
+.text-gray-600 { color: var(--text-secondary) !important; }
+.text-gray-500 { color: var(--text-secondary) !important; }
+.text-gray-400 { color: var(--text-secondary) !important; }
+.rounded-xl { border-radius: 2px !important; }
+.rounded-lg { border-radius: 2px !important; }
+.rounded-full { border-radius: 100px !important; }

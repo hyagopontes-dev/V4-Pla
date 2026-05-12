@@ -38,12 +38,7 @@ function InstagramEmbed({ url }: { url: string }) {
         frameBorder="0"
         scrolling="no"
         allowTransparency
-        className="rounded-xl border border-gray-200 max-w-full"
-        title="Instagram post"
-      />
-    </div>
-  )
-}
+        className="rounded-xl border border-gray-200
 
 export default function OrganicView({ analyses }: Props) {
   const months = uniqueSortedMonths(analyses)
@@ -53,18 +48,9 @@ export default function OrganicView({ analyses }: Props) {
   const filtered = analyses.filter(a => `${a.year}-${a.month}` === curMonth)
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-      <div className="px-5 py-4 border-b border-gray-100 flex items-center gap-2">
-        <Instagram size={16} className="text-pink-500" />
-        <h2 className="font-medium text-gray-900">Análise de Orgânico (Instagram)</h2>
-      </div>
-
-      <div className="px-5 pt-4 pb-2 flex gap-2 flex-wrap border-b border-gray-100">
-        {months.map(mk => {
-          const [y, m] = mk.split('-').map(Number)
-          return (
-            <button key={mk} onClick={() => setCurMonth(mk)}
-              className={`text-xs px-3 py-1.5 rounded-full border font-medium transition-colors ${curMonth === mk ? 'bg-gray-900 text-white border-gray-900' : 'border-gray-200 text-gray-500 hover:bg-gray-50'}`}>
+    <div className="bg-transparent rounded-xl border border-gray-200 className="text-pink-500" />
+        <h2 className="font-medium text-gray-900 onClick={() => setCurMonth(mk)}
+              className={`text-xs px-3 py-1.5 rounded-full border font-medium transition-colors ${curMonth === mk ? 'bg-gray-900 text-white border-gray-900' : 'border-gray-200" style={{borderColor:"var(--border)" text-gray-500" style={{color:"var(--text-secondary)" hover:bg-transparent'}`}>
               {MONTH_FULL[m - 1].slice(0, 3)} {y}
             </button>
           )
@@ -73,17 +59,13 @@ export default function OrganicView({ analyses }: Props) {
 
       <div className="divide-y divide-gray-50">
         {filtered.length === 0 ? (
-          <p className="text-gray-400 text-sm text-center py-6">Nenhum vídeo analisado neste período.</p>
-        ) : (
-          filtered.map((a, i) => (
-            <div key={a.id} className="p-5">
-              <p className="text-xs font-medium text-gray-400 mb-4">Vídeo #{i + 1}</p>
+          <p className="text-gray-400 className="p-5">
+              <p className="text-xs font-medium text-gray-400</p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 items-start">
                 {a.video_url && <InstagramEmbed url={a.video_url} />}
                 {a.analysis && (
                   <div>
-                    <p className="text-xs font-medium text-gray-500 mb-2">Análise crítica</p>
-                    <p className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">{a.analysis}</p>
+                    <p className="text-xs font-medium text-gray-500</p>
                   </div>
                 )}
               </div>

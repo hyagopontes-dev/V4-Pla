@@ -16,8 +16,8 @@ export default function DeliverableView({ deliverables, contractPieces }: Props)
 
   if (!sorted.length) {
     return (
-      <div className="bg-white rounded-xl border border-gray-200 p-8 text-center">
-        <p className="text-gray-400 text-sm">Nenhuma entrega registrada ainda.</p>
+      <div className="card p-8 text-center">
+        <p className="}>Nenhuma entrega registrada ainda.</p>
       </div>
     )
   }
@@ -29,10 +29,9 @@ export default function DeliverableView({ deliverables, contractPieces }: Props)
   const color = acima ? COLOR_EXTRA : (ent === 0 ? '#9ca3af' : COLOR_ORG)
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-      <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
-        <h2 className="font-medium text-gray-900">Entregas orgânicas</h2>
-        <span className="text-xs text-gray-400 bg-gray-100 px-2 py-1 rounded-full">
+    <div className="card overflow-hidden">
+      <div className="px-5 py-4 border-b border-gray-200 flex items-center justify-between}>Entregas orgânicas</h2>
+        <span className="badge-neutral">
           Meta: {contractPieces} peças/mês
         </span>
       </div>
@@ -75,19 +74,19 @@ export default function DeliverableView({ deliverables, contractPieces }: Props)
         <div className="grid grid-cols-2 gap-3 mb-5">
           <div className="bg-gray-50 rounded-xl p-4">
             <div className="flex items-center gap-2 mb-2">
-              <span className="w-2 h-2 rounded-full" style={{ background: color }} />
+              <span className="w-2 h-2 rounded-full} />
               <span className="text-xs text-gray-500">Entregue</span>
             </div>
-            <p className="text-3xl font-semibold" style={{ color }}>{ent}</p>
+            <p className="text-3xl font-semibold}>{ent}</p>
           </div>
           <div className="bg-gray-50 rounded-xl p-4">
             <div className="flex items-center gap-2 mb-2">
-              <span className="w-2 h-2 rounded-full" style={{ background: acima ? COLOR_EXTRA : ent >= contractPieces ? COLOR_ORG : '#9ca3af' }} />
+              <span className="w-2 h-2 rounded-full} />
               <span className="text-xs text-gray-500">
                 {acima ? 'Acima do plano' : ent >= contractPieces ? 'Meta batida' : 'Pendente'}
               </span>
             </div>
-            <p className="text-3xl font-semibold" style={{ color: acima ? COLOR_EXTRA : ent >= contractPieces ? COLOR_ORG : '#9ca3af' }}>
+            <p className="text-3xl font-semibold}>
               {acima ? `+${ent - contractPieces}` : contractPieces - ent}
             </p>
           </div>
@@ -109,9 +108,9 @@ export default function DeliverableView({ deliverables, contractPieces }: Props)
                   style={{ background: '#f9fafb' }}
                 >
                   <p className="text-xs text-gray-400">{MONTH_NAMES[d.month - 1]}</p>
-                  <p className="text-sm font-semibold mt-0.5" style={{ color: d.delivered > 0 ? c : '#9ca3af' }}>{d.delivered}/{contractPieces}</p>
+                  <p className="text-sm font-semibold mt-0.5}>{d.delivered}/{contractPieces}</p>
                   <p className="text-xs text-gray-400">{pp}%{over ? '+' : ''}</p>
-                  <div className="h-1 rounded-full mt-1.5" style={{ background: c, width: `${Math.min(pp, 100)}%`, opacity: d.delivered > 0 ? 1 : 0.2 }} />
+                  <div className="h-1 rounded-full mt-1.5%`, opacity: d.delivered > 0 ? 1 : 0.2 }} />
                 </div>
               )
             })}

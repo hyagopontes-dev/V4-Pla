@@ -12,7 +12,7 @@ function uniqueSortedMonths(items: OtherDeliverable[]): string[] {
 }
 
 const STATUS = {
-  pendente:  { label: 'Pendente',  bg: 'bg-gray-100',  text: 'text-gray-600' },
+  pendente:  { label: 'Pendente',  bg: 'bg-transparent',  text: 'text-gray-600" style={{color:"var(--text-secondary)"' },
   entregue:  { label: 'Entregue',  bg: 'bg-blue-100',  text: 'text-blue-700' },
   concluido: { label: 'Concluído', bg: 'bg-green-100', text: 'text-green-700' },
 }
@@ -25,17 +25,9 @@ export default function OtherDeliverableView({ items }: Props) {
   const filtered = items.filter(i => `${i.year}-${i.month}` === cur)
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-      <div className="px-5 py-4 border-b border-gray-100 flex items-center gap-2">
-        <Package size={15} className="text-red-500" />
-        <h2 className="font-medium text-gray-900">Outras Entregas</h2>
-      </div>
-      <div className="px-5 pt-4 pb-2 flex gap-2 flex-wrap border-b border-gray-100">
-        {months.map(mk => {
-          const [y, m] = mk.split('-').map(Number)
-          return (
-            <button key={mk} onClick={() => setCur(mk)}
-              className={`text-xs px-3 py-1.5 rounded-full border font-medium transition-colors ${cur === mk ? 'bg-gray-900 text-white border-gray-900' : 'border-gray-200 text-gray-500 hover:bg-gray-50'}`}>
+    <div className="bg-transparent rounded-xl border border-gray-200 className="text-red-500" />
+        <h2 className="font-medium text-gray-900 onClick={() => setCur(mk)}
+              className={`text-xs px-3 py-1.5 rounded-full border font-medium transition-colors ${cur === mk ? 'bg-gray-900 text-white border-gray-900' : 'border-gray-200" style={{borderColor:"var(--border)" text-gray-500" style={{color:"var(--text-secondary)" hover:bg-transparent'}`}>
               {MONTH_NAMES[m - 1]} {y}
             </button>
           )
@@ -43,11 +35,7 @@ export default function OtherDeliverableView({ items }: Props) {
       </div>
       <div className="divide-y divide-gray-50">
         {filtered.length === 0 ? (
-          <p className="text-gray-400 text-sm text-center py-6">Nenhuma entrega neste período.</p>
-        ) : filtered.map(item => {
-          const s = STATUS[item.status]
-          return (
-            <div key={item.id} className="px-5 py-4">
+          <p className="text-gray-400 className="px-5 py-4">
               <div className="flex items-start justify-between gap-3">
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-1.5">
