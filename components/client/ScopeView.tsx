@@ -22,7 +22,7 @@ export default function ScopeView({ scope, objectives }: Props) {
 
       {sorted.length > 0 && (
         <div className="bg-transparent rounded-xl border border-gray-200 className="text-blue-500" />
-            <h2 className="font-medium text-gray-900" style={{color:"var(--text)" text-sm">Objetivos mensais</h2>
+            <h2 className="font-medium text-gray-900 text-sm">Objetivos mensais</h2>
           </div>
           <div className="divide-y divide-gray-50">
             {sorted.map(obj => (

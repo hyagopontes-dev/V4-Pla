@@ -20,7 +20,7 @@ export default function ReferencesView({ references }: Props) {
 
   return (
     <div className="bg-transparent rounded-xl border border-gray-200 className="text-red-500" />
-        <h2 className="font-medium text-gray-900" style={{color:"var(--text)"">Referências</h2>
+        <h2 className="font-medium text-gray-900 ">Referências</h2>
       </div>
       <div className="p-5 space-y-5">
         {(Object.entries(grouped) as [ClientReference['type'], ClientReference[]][]).map(([type, list]) => {
