@@ -1,8 +1,9 @@
 'use client'
 import { useState, useMemo } from 'react'
+import React from 'react'
 import { createClient } from '@/lib/supabase'
 import { Task } from '@/types'
-import { Plus, X, Check, ChevronDown, Calendar, User, Flag, Search, Filter } from 'lucide-react'
+import { Plus, X, Check, ChevronDown, Calendar, User, Flag, Search, Filter, Bold, Italic, List, ChevronUp } from 'lucide-react'
 
 interface Client { id: string; name: string; slug: string }
 interface Props { clients: Client[]; initialTasks: Task[] }
@@ -63,12 +64,44 @@ function PDCAStepper({ value, onChange }: { value: Task['pdca']; onChange: (v: T
   )
 }
 
+function RichEditor({ value, onChange, placeholder = 'Descrição...' }: { value: string; onChange: (v: string) => void; placeholder?: string }) {
+  const ref = React.useRef<HTMLDivElement>(null)
+  const btnBase: React.CSSProperties = {
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
+    width: '26px', height: '26px', borderRadius: '2px',
+    border: '1px solid transparent', background: 'transparent',
+    color: 'var(--text-secondary)', cursor: 'pointer',
+  }
+  function exec(cmd: string, val?: string) {
+    ref.current?.focus()
+    document.execCommand(cmd, false, val)
+    if (ref.current) onChange(ref.current.innerHTML)
+  }
+  return (
+    <div style={{ border: '1px solid var(--border)', borderRadius: '2px', overflow: 'hidden' }}>
+      <div style={{ display: 'flex', gap: '2px', padding: '4px 8px', borderBottom: '1px solid var(--border)', background: 'var(--bg-hover)' }}>
+        <button type="button" onMouseDown={e => { e.preventDefault(); exec('bold') }} style={btnBase} title="Negrito"><Bold size={12} /></button>
+        <button type="button" onMouseDown={e => { e.preventDefault(); exec('italic') }} style={btnBase} title="Itálico"><Italic size={12} /></button>
+        <button type="button" onMouseDown={e => { e.preventDefault(); exec('insertUnorderedList') }} style={btnBase} title="Lista"><List size={12} /></button>
+      </div>
+      <div ref={ref} contentEditable suppressContentEditableWarning
+        onInput={() => { if (ref.current) onChange(ref.current.innerHTML) }}
+        dangerouslySetInnerHTML={{ __html: value || '' }}
+        data-placeholder={placeholder}
+        style={{ minHeight: '80px', padding: '10px 12px', background: 'var(--bg-input)', color: 'var(--text)', fontSize: '12px', lineHeight: 1.7, outline: 'none', fontFamily: "'DM Sans', sans-serif" }}
+      />
+      <style>{`[contenteditable]:empty:before{content:attr(data-placeholder);color:var(--text-secondary);opacity:.5;pointer-events:none}[contenteditable] b,[contenteditable] strong{font-weight:700}[contenteditable] i,[contenteditable] em{font-style:italic}[contenteditable] ul{padding-left:18px;margin:4px 0}[contenteditable] li{margin:2px 0}[contenteditable] p{margin:4px 0}`}</style>
+    </div>
+  )
+}
+
 function TaskCard({ task, clientName, onUpdate, onDelete }: {
   task: Task; clientName: string
   onUpdate: (id: string, updates: Partial<Task>) => void
   onDelete: (id: string) => void
 }) {
   const [editing, setEditing] = useState(false)
+  const [showDesc, setShowDesc] = useState(false)
   const [form, setForm] = useState({ title: task.title, description: task.description ?? '', responsible: task.responsible ?? '', due_date: task.due_date ?? '', priority: task.priority })
   const overdue = task.due_date && !task.completed && new Date(task.due_date) < new Date()
   const pr = PRIORITY[task.priority]
@@ -130,7 +163,16 @@ function TaskCard({ task, clientName, onUpdate, onDelete }: {
                 textDecoration: task.completed ? 'line-through' : 'none',
               }}>{task.title}</p>
               {task.description && (
-                <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '3px', lineHeight: 1.5 }}>{task.description}</p>
+                <button onClick={() => setShowDesc(s => !s)}
+                  style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', color: 'var(--text-secondary)', background: 'none', border: 'none', cursor: 'pointer', marginTop: '4px', padding: 0 }}>
+                  {showDesc ? <ChevronUp size={11} /> : <ChevronDown size={11} />}
+                  {showDesc ? 'Ocultar descrição' : 'Ver descrição'}
+                </button>
+              )}
+              {task.description && showDesc && (
+                <div dangerouslySetInnerHTML={{ __html: task.description }}
+                  style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '6px', lineHeight: 1.7,
+                    padding: '8px 12px', background: 'var(--bg-hover)', border: '1px solid var(--border)', borderRadius: '2px' }} />
               )}
             </div>
 
@@ -320,7 +362,7 @@ export default function TaskBoard({ clients, initialTasks }: Props) {
                 <input className="input" placeholder="Descrição da tarefa..." value={newForm.title} onChange={e => setNewForm(f => ({ ...f, title: e.target.value }))} />
               </div>
             </div>
-            <textarea className="input" style={{ minHeight: '70px', resize: 'vertical' }} placeholder="Descrição adicional (opcional)..." value={newForm.description} onChange={e => setNewForm(f => ({ ...f, description: e.target.value }))} />
+            <RichEditor value={newForm.description} onChange={v => setNewForm(f => ({ ...f, description: v }))} placeholder="Descrição adicional (opcional)..." />
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px' }}>
               <div>
                 <label className="label">Responsável</label>
