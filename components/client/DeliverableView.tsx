@@ -72,25 +72,17 @@ export default function DeliverableView({ deliverables, contractPieces }: Props)
           )}
         </div>
 
-        {/* Items */}
-        {current.items && current.items.length > 0 && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            {current.items.map((item: any, i: number) => (
-              <div key={i} style={{
-                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                padding: '10px 14px', background: 'var(--bg-hover)',
-                border: '1px solid var(--border)', borderRadius: '2px', gap: '12px'
-              }}>
-                <span style={{ fontSize: '13px', color: 'var(--text)' }}>{item.name ?? item}</span>
-                {item.url && (
-                  <a href={item.url} target="_blank" rel="noopener"
-                    style={{ fontSize: '11px', color: 'var(--yellow)', display: 'flex', alignItems: 'center', gap: '4px', textDecoration: 'none', flexShrink: 0 }}>
-                    <ExternalLink size={11} /> Ver
-                  </a>
-                )}
-              </div>
-            ))}
+        {/* Notes and doc */}
+        {current.notes && (
+          <div style={{ padding: '12px 14px', background: 'var(--bg-hover)', border: '1px solid var(--border)', borderRadius: '2px' }}>
+            <p style={{ fontSize: '12px', color: 'var(--text-secondary)', lineHeight: 1.6 }}>{current.notes}</p>
           </div>
+        )}
+        {current.doc_url && (
+          <a href={current.doc_url} target="_blank" rel="noopener"
+            style={{ fontSize: '12px', color: 'var(--yellow)', display: 'inline-flex', alignItems: 'center', gap: '6px', textDecoration: 'none' }}>
+            <ExternalLink size={12} /> Ver documento de entregas
+          </a>
         )}
       </div>
     </div>
