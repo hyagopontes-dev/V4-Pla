@@ -1,13 +1,111 @@
 'use client'
-import { useState } from 'react'
+import { useState, useRef, useCallback } from 'react'
 import { createClient } from '@/lib/supabase'
 import { CommLog, MONTH_FULL } from '@/types'
-import { Save, Plus } from 'lucide-react'
+import { Save, Plus, Bold, Italic, List, Link2, AlignLeft } from 'lucide-react'
 
 interface Props { clientId: string; logs: CommLog[] }
 
 const CURRENT_YEAR = new Date().getFullYear()
 const YEARS = [CURRENT_YEAR - 1, CURRENT_YEAR, CURRENT_YEAR + 1]
+
+function RichEditor({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const editorRef = useRef<HTMLDivElement>(null)
+
+  function exec(cmd: string, val?: string) {
+    editorRef.current?.focus()
+    document.execCommand(cmd, false, val)
+    if (editorRef.current) onChange(editorRef.current.innerHTML)
+  }
+
+  function handleInput() {
+    if (editorRef.current) onChange(editorRef.current.innerHTML)
+  }
+
+  function handleLink() {
+    const url = prompt('Cole a URL do link:')
+    if (url) exec('createLink', url)
+  }
+
+  const tools = [
+    { icon: Bold, cmd: 'bold', title: 'Negrito (Ctrl+B)' },
+    { icon: Italic, cmd: 'italic', title: 'Itálico (Ctrl+I)' },
+    { icon: List, cmd: 'insertUnorderedList', title: 'Lista' },
+    { icon: AlignLeft, cmd: 'formatBlock', val: '<p>', title: 'Parágrafo' },
+  ]
+
+  return (
+    <div style={{ border: '1px solid var(--border)', borderRadius: '2px', overflow: 'hidden' }}>
+      {/* Toolbar */}
+      <div style={{
+        display: 'flex', alignItems: 'center', gap: '2px',
+        padding: '6px 10px', borderBottom: '1px solid var(--border)',
+        background: 'var(--bg-hover)', flexWrap: 'wrap'
+      }}>
+        {tools.map(({ icon: Icon, cmd, val, title }) => (
+          <button key={cmd} title={title}
+            onMouseDown={e => { e.preventDefault(); exec(cmd, val) }}
+            style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              width: '28px', height: '28px', borderRadius: '2px',
+              border: '1px solid transparent', background: 'transparent',
+              color: 'var(--text-secondary)', cursor: 'pointer', transition: 'all 0.1s'
+            }}
+            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'var(--bg-input)'; (e.currentTarget as HTMLElement).style.borderColor = 'var(--border)'; (e.currentTarget as HTMLElement).style.color = 'var(--text)' }}
+            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.borderColor = 'transparent'; (e.currentTarget as HTMLElement).style.color = 'var(--text-secondary)' }}
+          >
+            <Icon size={14} />
+          </button>
+        ))}
+        <div style={{ width: '1px', height: '20px', background: 'var(--border)', margin: '0 4px' }} />
+        <button title="Inserir link"
+          onMouseDown={e => { e.preventDefault(); handleLink() }}
+          style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            width: '28px', height: '28px', borderRadius: '2px',
+            border: '1px solid transparent', background: 'transparent',
+            color: 'var(--text-secondary)', cursor: 'pointer'
+          }}>
+          <Link2 size={14} />
+        </button>
+        <span style={{ marginLeft: 'auto', fontSize: '10px', color: 'var(--text-muted)', letterSpacing: '0.05em' }}>
+          Ctrl+B = negrito · Enter = novo parágrafo
+        </span>
+      </div>
+
+      {/* Editor area */}
+      <div
+        ref={editorRef}
+        contentEditable
+        suppressContentEditableWarning
+        onInput={handleInput}
+        dangerouslySetInnerHTML={{ __html: value || '' }}
+        style={{
+          minHeight: '200px', padding: '14px 16px',
+          background: 'var(--bg-input)', color: 'var(--text)',
+          fontSize: '13px', lineHeight: 1.8, outline: 'none',
+          fontFamily: "'DM Sans', sans-serif",
+        }}
+        data-placeholder="Registre conversas, reuniões, decisões importantes..."
+      />
+
+      <style>{`
+        [contenteditable]:empty:before {
+          content: attr(data-placeholder);
+          color: var(--text-secondary);
+          opacity: 0.5;
+          pointer-events: none;
+        }
+        [contenteditable] b, [contenteditable] strong { font-weight: 700; color: var(--text); }
+        [contenteditable] i, [contenteditable] em { font-style: italic; }
+        [contenteditable] ul { padding-left: 20px; margin: 8px 0; }
+        [contenteditable] li { margin: 4px 0; }
+        [contenteditable] a { color: var(--yellow); text-decoration: underline; }
+        [contenteditable] p { margin: 6px 0; }
+      `}</style>
+    </div>
+  )
+}
 
 export default function CommLogManager({ clientId, logs: initial }: Props) {
   const [logs, setLogs] = useState<CommLog[]>(initial)
@@ -40,16 +138,16 @@ export default function CommLogManager({ clientId, logs: initial }: Props) {
   const active = sorted.find(l => l.id === activeId)
 
   return (
-    <div className="card p-0 overflow-hidden">
-      <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
-        <h2 className="font-medium text-gray-900">Comunicação & Histórico</h2>
-        <button onClick={() => setShowForm(true)} className="btn-primary flex items-center gap-1.5 text-xs py-1.5 px-3">
-          <Plus size={13} /> Novo mês
+    <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
+      <div style={{ padding: '14px 20px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <h2 style={{ fontWeight: 500, color: 'var(--text)', fontSize: '14px' }}>Comunicação & Histórico</h2>
+        <button onClick={() => setShowForm(true)} className="btn-primary" style={{ padding: '6px 14px', fontSize: '11px' }}>
+          <Plus size={12} /> Novo mês
         </button>
       </div>
 
       {showForm && (
-        <div className="p-4 bg-gray-50 border-b border-gray-100 flex items-end gap-3">
+        <div style={{ padding: '14px 20px', borderBottom: '1px solid var(--border)', background: 'var(--bg-hover)', display: 'flex', alignItems: 'flex-end', gap: '12px' }}>
           <div>
             <label className="label">Mês</label>
             <select className="input" value={form.month} onChange={e => setForm(f => ({ ...f, month: e.target.value }))}>
@@ -62,39 +160,47 @@ export default function CommLogManager({ clientId, logs: initial }: Props) {
               {YEARS.map(y => <option key={y}>{y}</option>)}
             </select>
           </div>
-          <button onClick={addLog} className="btn-primary text-xs py-2">Criar</button>
-          <button onClick={() => setShowForm(false)} className="btn-secondary text-xs py-2">Cancelar</button>
+          <button onClick={addLog} className="btn-primary" style={{ padding: '8px 16px', fontSize: '11px' }}>Criar</button>
+          <button onClick={() => setShowForm(false)} className="btn-ghost" style={{ padding: '8px 16px', fontSize: '11px' }}>Cancelar</button>
         </div>
       )}
 
-      <div className="flex">
+      <div style={{ display: 'flex' }}>
         {sorted.length > 0 && (
-          <div className="w-32 border-r border-gray-100 bg-gray-50 flex-shrink-0">
+          <div style={{ width: '120px', borderRight: '1px solid var(--border)', flexShrink: 0, background: 'var(--bg-hover)' }}>
             {sorted.map(l => (
-              <button
-                key={l.id}
-                onClick={() => setActiveId(l.id)}
-                className={`w-full text-left px-3 py-2.5 text-xs border-b border-gray-100 transition-colors ${activeId === l.id ? 'bg-white font-medium text-gray-900' : 'text-gray-500 hover:bg-white'}`}
-              >
+              <button key={l.id} onClick={() => setActiveId(l.id)} style={{
+                width: '100%', textAlign: 'left', padding: '10px 14px',
+                fontSize: '12px', borderBottom: '1px solid var(--border)',
+                background: activeId === l.id ? 'var(--bg-card)' : 'transparent',
+                color: activeId === l.id ? 'var(--yellow)' : 'var(--text-secondary)',
+                fontWeight: activeId === l.id ? 600 : 400,
+                borderLeft: activeId === l.id ? '2px solid var(--yellow)' : '2px solid transparent',
+                cursor: 'pointer', transition: 'all 0.15s', border: 'none',
+                borderBottom: '1px solid var(--border)',
+                borderLeft: activeId === l.id ? '2px solid var(--yellow)' : '2px solid transparent',
+              }}>
                 {MONTH_FULL[l.month - 1].slice(0, 3)} {l.year}
               </button>
             ))}
           </div>
         )}
 
-        <div className="flex-1 p-4">
+        <div style={{ flex: 1, padding: '16px' }}>
           {!active ? (
-            <p className="text-gray-400 text-sm text-center py-6">Nenhum log criado ainda.</p>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '13px', textAlign: 'center', padding: '24px 0' }}>
+              Nenhum log criado ainda.
+            </p>
           ) : (
-            <div className="space-y-3">
-              <p className="text-xs text-gray-500 font-medium">{MONTH_FULL[active.month - 1]} {active.year}</p>
-              <textarea
-                className="input min-h-[180px] resize-y text-sm"
-                placeholder="Registre conversas, reuniões, decisões importantes. Suporta links: https://meet.google.com/..."
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <p style={{ fontSize: '10px', letterSpacing: '0.15em', textTransform: 'uppercase', color: 'var(--yellow)', fontWeight: 600 }}>
+                {MONTH_FULL[active.month - 1]} {active.year}
+              </p>
+              <RichEditor
                 value={active.content ?? ''}
-                onChange={e => updateContent(active.id, e.target.value)}
+                onChange={v => updateContent(active.id, v)}
               />
-              <button onClick={() => saveLog(active)} className="btn-primary flex items-center gap-2 text-xs py-1.5">
+              <button onClick={() => saveLog(active)} className="btn-primary" style={{ padding: '8px 20px', fontSize: '11px', alignSelf: 'flex-start' }}>
                 <Save size={13} /> {saving === active.id ? 'Salvando...' : 'Salvar'}
               </button>
             </div>

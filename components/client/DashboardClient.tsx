@@ -1,7 +1,7 @@
 'use client'
+// v2 - unified deliverables
 import { useState } from 'react'
 import DeliverableView from './DeliverableView'
-import OtherDeliverableView from './OtherDeliverableView'
 import TrafficView from './TrafficView'
 import LiveTrafficView from './LiveTrafficView'
 import BlockerView from './BlockerView'
