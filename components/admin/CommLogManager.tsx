@@ -175,8 +175,8 @@ export default function CommLogManager({ clientId, logs: initial }: Props) {
                 background: activeId === l.id ? 'var(--bg-card)' : 'transparent',
                 color: activeId === l.id ? 'var(--yellow)' : 'var(--text-secondary)',
                 fontWeight: activeId === l.id ? 600 : 400,
-                borderLeft: activeId === l.id ? '2px solid var(--yellow)' : '2px solid transparent',
-                cursor: 'pointer', transition: 'all 0.15s', border: 'none',
+                cursor: 'pointer', transition: 'all 0.15s',
+                border: 'none',
                 borderBottom: '1px solid var(--border)',
                 borderLeft: activeId === l.id ? '2px solid var(--yellow)' : '2px solid transparent',
               }}>
