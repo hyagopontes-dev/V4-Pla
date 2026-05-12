@@ -1,7 +1,7 @@
 'use client'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { LayoutDashboard, Users, LogOut, Sparkles, Trophy } from 'lucide-react'
+import { LayoutDashboard, Users, LogOut, Sparkles, Trophy, CheckSquare } from 'lucide-react'
 import { createClient } from '@/lib/supabase'
 import ThemeToggle from './ThemeToggle'
 
@@ -10,6 +10,7 @@ const nav = [
   { href: '/admin/clients', label: 'Clientes', icon: Users },
   { href: '/admin/ai', label: 'IA Studio', icon: Sparkles },
   { href: '/admin/planning', label: 'Planejamento', icon: Trophy },
+  { href: '/admin/tasks', label: 'Tarefas', icon: CheckSquare },
 ]
 
 export default function AdminSidebar() {

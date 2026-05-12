@@ -191,3 +191,18 @@ export interface ClientHandoff {
   created_at: string
   updated_at: string
 }
+
+export interface Task {
+  id: string
+  client_id: string
+  title: string
+  description?: string
+  responsible?: string
+  due_date?: string
+  priority: 'baixa' | 'media' | 'alta' | 'urgente'
+  pdca: 'plan' | 'do' | 'check' | 'act'
+  completed: boolean
+  completed_at?: string
+  created_at: string
+  updated_at: string
+}

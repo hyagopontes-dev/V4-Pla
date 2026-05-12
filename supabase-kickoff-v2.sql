@@ -145,3 +145,21 @@ alter table public.strategic_planning
   add column if not exists p7_link_fotos text,
   add column if not exists p7_link_materiais text,
   add column if not exists p7_observacoes_vi text;
+
+-- Task management with PDCA
+create table if not exists public.tasks (
+  id uuid default gen_random_uuid() primary key,
+  client_id uuid references public.clients(id) on delete cascade not null,
+  title text not null,
+  description text,
+  responsible text,
+  due_date date,
+  priority text default 'media' check (priority in ('baixa','media','alta','urgente')),
+  pdca text default 'plan' check (pdca in ('plan','do','check','act')),
+  completed boolean default false,
+  completed_at timestamptz,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+alter table public.tasks disable row level security;
+create index if not exists tasks_client_id_idx on public.tasks(client_id);
