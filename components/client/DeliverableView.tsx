@@ -1,13 +1,9 @@
 'use client'
 import { useState } from 'react'
-import { Deliverable, MONTH_NAMES, MONTH_FULL } from '@/types'
-import { ExternalLink } from 'lucide-react'
-import clsx from 'clsx'
+import { Deliverable, MONTH_NAMES } from '@/types'
+import { ExternalLink, Package } from 'lucide-react'
 
 interface Props { deliverables: Deliverable[]; contractPieces: number }
-
-const COLOR_ORG = '#639922'
-const COLOR_EXTRA = '#185FA5'
 
 export default function DeliverableView({ deliverables, contractPieces }: Props) {
   const sorted = [...deliverables].sort((a, b) => a.year !== b.year ? b.year - a.year : b.month - a.month)
@@ -16,124 +12,85 @@ export default function DeliverableView({ deliverables, contractPieces }: Props)
 
   if (!sorted.length) {
     return (
-      <div className="card p-8 text-center">
-        <p className="}>Nenhuma entrega registrada ainda.</p>
+      <div className="card" style={{ textAlign: 'center', padding: '40px' }}>
+        <p style={{ color: 'var(--text-secondary)', fontSize: '13px' }}>Nenhuma entrega registrada ainda.</p>
       </div>
     )
   }
 
   const ent = current.delivered
-  const acima = ent > contractPieces
-  const pct = Math.round((ent / contractPieces) * 100)
-  const barPct = Math.min(pct, 100)
-  const color = acima ? COLOR_EXTRA : (ent === 0 ? '#9ca3af' : COLOR_ORG)
+  const pct = Math.min(Math.round((ent / contractPieces) * 100), 100)
+  const over = ent > contractPieces
+  const accentColor = over ? '#3B82F6' : ent === 0 ? 'var(--text-secondary)' : '#5A9E27'
 
   return (
-    <div className="card overflow-hidden">
-      <div className="px-5 py-4 border-b border-gray-200 flex items-center justify-between}>Entregas orgânicas</h2>
-        <span className="badge-neutral">
-          Meta: {contractPieces} peças/mês
-        </span>
+    <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
+      <div style={{ padding: '14px 20px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <Package size={15} style={{ color: 'var(--yellow)' }} />
+          <h2 style={{ fontWeight: 500, color: 'var(--text)', fontSize: '14px' }}>Entregas Orgânicas</h2>
+        </div>
+        <span className="badge-neutral">Meta: {contractPieces} peças/mês</span>
       </div>
 
-      <div className="p-5">
-        {/* Month selector */}
-        <div className="flex gap-2 flex-wrap mb-5">
-          {sorted.map((d, i) => {
-            const over = d.delivered > contractPieces
-            const isActive = i === curIdx
-            const bg = isActive ? (over ? COLOR_EXTRA : COLOR_ORG) : 'transparent'
-            const textColor = isActive ? '#fff' : '#6b7280'
-            const border = isActive ? (over ? COLOR_EXTRA : COLOR_ORG) : '#d1d5db'
-            return (
-              <button
-                key={d.id}
-                onClick={() => setCurIdx(i)}
-                className="text-xs px-3 py-1.5 rounded-full border transition-colors font-medium"
-                style={{ background: bg, color: textColor, borderColor: border }}
-              >
-                {MONTH_NAMES[d.month - 1]} {d.year}
-              </button>
-            )
-          })}
-        </div>
+      {/* Month tabs */}
+      <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--border)', display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+        {sorted.map((d, i) => {
+          const active = i === curIdx
+          const isOver = d.delivered > contractPieces
+          return (
+            <button key={d.id} onClick={() => setCurIdx(i)} style={{
+              fontSize: '11px', padding: '4px 12px', borderRadius: '2px',
+              border: `1px solid ${active ? 'var(--yellow)' : 'var(--border)'}`,
+              background: active ? 'var(--yellow-bg)' : 'transparent',
+              color: active ? 'var(--yellow)' : 'var(--text-secondary)',
+              cursor: 'pointer', fontWeight: active ? 600 : 400,
+              letterSpacing: '0.05em', transition: 'all 0.15s'
+            }}>
+              {MONTH_NAMES[d.month - 1]} {d.year}
+            </button>
+          )
+        })}
+      </div>
 
-        {/* Progress bar */}
-        <div className="h-2 bg-gray-100 rounded-full overflow-hidden mb-2">
-          <div
-            className="h-full rounded-full transition-all duration-500"
-            style={{ width: `${barPct}%`, background: color }}
-          />
-        </div>
-        <div className="flex justify-between text-xs text-gray-500 mb-5">
-          <span>{pct}% {acima ? 'acima da meta' : ent === 0 ? 'sem entregas' : 'concluído'} — {MONTH_FULL[current.month - 1]} {current.year}</span>
-          <span>{ent} / {contractPieces} planejadas</span>
-        </div>
-
-        {/* Big counters */}
-        <div className="grid grid-cols-2 gap-3 mb-5">
-          <div className="bg-gray-50 rounded-xl p-4">
-            <div className="flex items-center gap-2 mb-2">
-              <span className="w-2 h-2 rounded-full} />
-              <span className="text-xs text-gray-500">Entregue</span>
-            </div>
-            <p className="text-3xl font-semibold}>{ent}</p>
+      <div style={{ padding: '20px' }}>
+        {/* Progress */}
+        <div style={{ marginBottom: '20px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+            <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
+              {ent} de {contractPieces} peças entregues
+            </span>
+            <span style={{ fontSize: '12px', fontWeight: 700, color: accentColor }}>{pct}%</span>
           </div>
-          <div className="bg-gray-50 rounded-xl p-4">
-            <div className="flex items-center gap-2 mb-2">
-              <span className="w-2 h-2 rounded-full} />
-              <span className="text-xs text-gray-500">
-                {acima ? 'Acima do plano' : ent >= contractPieces ? 'Meta batida' : 'Pendente'}
-              </span>
-            </div>
-            <p className="text-3xl font-semibold}>
-              {acima ? `+${ent - contractPieces}` : contractPieces - ent}
+          <div style={{ height: '6px', background: 'var(--bg-hover)', borderRadius: '2px', overflow: 'hidden' }}>
+            <div style={{ height: '100%', width: `${pct}%`, background: accentColor, borderRadius: '2px', transition: 'width 0.5s' }} />
+          </div>
+          {over && (
+            <p style={{ fontSize: '11px', color: '#3B82F6', marginTop: '4px' }}>
+              +{ent - contractPieces} peças além do contrato
             </p>
-          </div>
+          )}
         </div>
 
-        {/* History grid */}
-        <div>
-          <p className="text-xs text-gray-400 mb-2">Histórico</p>
-          <div className="grid grid-cols-6 gap-2">
-            {sorted.map((d, i) => {
-              const pp = Math.round((d.delivered / contractPieces) * 100)
-              const over = d.delivered > contractPieces
-              const c = over ? COLOR_EXTRA : d.delivered > 0 ? COLOR_ORG : '#9ca3af'
-              return (
-                <div
-                  key={d.id}
-                  onClick={() => setCurIdx(i)}
-                  className={clsx('rounded-lg p-2 text-center cursor-pointer border transition-colors', i === curIdx ? 'border-gray-400' : 'border-transparent hover:border-gray-200')}
-                  style={{ background: '#f9fafb' }}
-                >
-                  <p className="text-xs text-gray-400">{MONTH_NAMES[d.month - 1]}</p>
-                  <p className="text-sm font-semibold mt-0.5}>{d.delivered}/{contractPieces}</p>
-                  <p className="text-xs text-gray-400">{pp}%{over ? '+' : ''}</p>
-                  <div className="h-1 rounded-full mt-1.5%`, opacity: d.delivered > 0 ? 1 : 0.2 }} />
-                </div>
-              )
-            })}
+        {/* Items */}
+        {current.items && current.items.length > 0 && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            {current.items.map((item: any, i: number) => (
+              <div key={i} style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                padding: '10px 14px', background: 'var(--bg-hover)',
+                border: '1px solid var(--border)', borderRadius: '2px', gap: '12px'
+              }}>
+                <span style={{ fontSize: '13px', color: 'var(--text)' }}>{item.name ?? item}</span>
+                {item.url && (
+                  <a href={item.url} target="_blank" rel="noopener"
+                    style={{ fontSize: '11px', color: 'var(--yellow)', display: 'flex', alignItems: 'center', gap: '4px', textDecoration: 'none', flexShrink: 0 }}>
+                    <ExternalLink size={11} /> Ver
+                  </a>
+                )}
+              </div>
+            ))}
           </div>
-        </div>
-
-        {/* Document link */}
-        {current.doc_url ? (
-          <div className="mt-4 pt-4 border-t border-gray-100 flex items-center justify-between">
-            <span className="text-xs text-gray-500">Planejamento de {MONTH_FULL[current.month - 1]} {current.year}</span>
-            <a
-              href={current.doc_url}
-              target="_blank"
-              rel="noopener"
-              className="flex items-center gap-2 text-xs px-4 py-2 rounded-full border border-gray-200 text-gray-700 hover:bg-gray-50 transition-colors"
-            >
-              <ExternalLink size={12} /> Acessar agora
-            </a>
-          </div>
-        ) : (
-          <p className="text-xs text-gray-400 mt-4 pt-4 border-t border-gray-100">
-            Nenhum documento vinculado a este mês.
-          </p>
         )}
       </div>
     </div>
