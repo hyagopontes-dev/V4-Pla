@@ -19,8 +19,8 @@ export default function ReferencesView({ references }: Props) {
             padding: '12px 14px', background: 'var(--bg-hover)',
             border: '1px solid var(--border)', borderRadius: '2px'
           }}>
-            <p style={{ fontSize: '13px', color: 'var(--text)', fontWeight: 500, marginBottom: ref.url ? '4px' : 0 }}>{ref.title}</p>
-            {ref.description && <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: ref.url ? '6px' : 0, lineHeight: 1.5 }}>{ref.description}</p>}
+            <p style={{ fontSize: '13px', color: 'var(--text)', fontWeight: 500, marginBottom: ref.url ? '4px' : 0 }}>{ref.name}</p>
+            {ref.notes && <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: ref.url ? '6px' : 0, lineHeight: 1.5 }}>{ref.notes}</p>}
             {ref.url && (
               <a href={ref.url} target="_blank" rel="noopener"
                 style={{ fontSize: '11px', color: 'var(--yellow)', display: 'inline-flex', alignItems: 'center', gap: '4px', textDecoration: 'none' }}>
