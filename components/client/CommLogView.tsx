@@ -6,7 +6,7 @@ interface Props { logs: CommLog[] }
 
 export default function CommLogView({ logs }: Props) {
   if (!logs.length) return null
-  const sorted = [...logs].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+  const sorted = [...logs].sort((a, b) => a.year !== b.year ? b.year - a.year : b.month - a.month)
 
   return (
     <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
@@ -21,12 +21,12 @@ export default function CommLogView({ logs }: Props) {
             border: '1px solid var(--border)', borderRadius: '2px'
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
-              <span style={{ fontSize: '10px', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--yellow)', fontWeight: 600 }}>{log.type}</span>
+              <span className="badge-warning">{log.month}/{log.year}</span>
               <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
-                {new Date(log.created_at).toLocaleDateString('pt-BR')}
+                {log.month}/{log.year}
               </span>
             </div>
-            <p style={{ fontSize: '13px', color: 'var(--text)', lineHeight: 1.6 }}>{log.message}</p>
+            <p style={{ fontSize: '13px', color: 'var(--text)', lineHeight: 1.6 }}>{log.content}</p>
           </div>
         ))}
       </div>
