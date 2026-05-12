@@ -34,7 +34,7 @@ export default function ScopeView({ scope, objectives }: Props) {
                 border: '1px solid var(--border)', borderRadius: '2px'
               }}>
                 <div style={{ width: '6px', height: '6px', background: 'var(--yellow)', borderRadius: '1px', marginTop: '5px', flexShrink: 0 }} />
-                <p style={{ fontSize: '13px', color: 'var(--text)', lineHeight: 1.5 }}>{obj.text}</p>
+                <p style={{ fontSize: '13px', color: 'var(--text)', lineHeight: 1.5 }}>{obj.content}</p>
               </div>
             ))}
           </div>
