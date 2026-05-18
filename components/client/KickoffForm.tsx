@@ -115,7 +115,7 @@ export default function KickoffForm({ client, alreadySubmitted, submittedAt }: P
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen" style={{ background: "#f5f5f0", color: "#111111" }}>
       <div className={`bg-gradient-to-r ${section.color} text-white`}>
         <div className="max-w-2xl mx-auto px-6 py-6">
           <div className="flex items-center gap-3 mb-4">
@@ -143,10 +143,11 @@ export default function KickoffForm({ client, alreadySubmitted, submittedAt }: P
 
       <div className="max-w-2xl mx-auto px-6 py-8 space-y-6">
         {section.fields.map(field => (
-          <div key={field.key} className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-            <p className="text-gray-800 text-sm font-medium mb-3 leading-relaxed">{field.question}</p>
+          <div key={field.key} style={{ background: "#ffffff", borderRadius: "16px", padding: "24px", boxShadow: "0 1px 3px rgba(0,0,0,0.06)", border: "1px solid #e5e7eb" }}>
+            <p style={{ color: "#111111", fontSize: "14px", fontWeight: 500, marginBottom: "12px", lineHeight: 1.6 }}>{field.question}</p>
             <textarea
               className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent resize-none min-h-[110px]"
+              style={{ background: '#ffffff', color: '#111111' }}
               placeholder="Escreva aqui..."
               value={form[field.key] ?? ''}
               onChange={e => setForm(f => ({ ...f, [field.key]: e.target.value }))}
