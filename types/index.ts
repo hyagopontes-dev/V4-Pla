@@ -118,6 +118,9 @@ export interface AdsIntegration {
   account_id?: string
   refresh_token?: string
   token_expires_at?: string
+  mcc_id?: string
+  property_id?: string
+  n8n_webhook_url?: string
   active: boolean
   updated_at: string
 }
