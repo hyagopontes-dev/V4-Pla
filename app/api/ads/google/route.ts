@@ -20,7 +20,7 @@ async function refreshAccessToken(refreshToken: string): Promise<string | null> 
   return data.access_token
 }
 
-async function gaqlQuery(accessToken: string, customerId: string, devToken: string, query: string) {
+async function gaqlQuery(accessToken: string, customerId: string, devToken: string, query: string, mccId?: string) {
   const attempts = [
     { ver: 'v18', withLogin: true }, { ver: 'v18', withLogin: false },
     { ver: 'v17', withLogin: true }, { ver: 'v17', withLogin: false },
@@ -32,7 +32,9 @@ async function gaqlQuery(accessToken: string, customerId: string, devToken: stri
       'developer-token': devToken,
       'Content-Type': 'application/json',
     }
-    if (withLogin) headers['login-customer-id'] = customerId
+    // MCC: login-customer-id = MCC ID, customer = client account ID
+    if (mccId) headers['login-customer-id'] = mccId.replace(/-/g, '')
+    else if (withLogin) headers['login-customer-id'] = customerId
     const url = `https://googleads.googleapis.com/${ver}/customers/${customerId}/googleAds:search`
     const res = await fetch(url, { method: 'POST', headers, body: JSON.stringify({ query }) })
     const text = await res.text()
@@ -139,7 +141,7 @@ function buildDateRange(date_preset: string) {
 
 export async function POST(request: NextRequest) {
   try {
-    const { access_token, account_id, date_preset, client_id: supabaseClientId, refresh_token } = await request.json()
+    const { access_token, account_id, date_preset, client_id: supabaseClientId, refresh_token, mcc_id } = await request.json()
     if (!account_id) return NextResponse.json({ error: 'Customer ID ausente' }, { status: 400 })
     const devToken = process.env.GOOGLE_ADS_DEVELOPER_TOKEN
     if (!devToken) return NextResponse.json({ error: 'GOOGLE_ADS_DEVELOPER_TOKEN não configurado' }, { status: 500 })
@@ -148,6 +150,28 @@ export async function POST(request: NextRequest) {
     const cacheKey = `google-v2-${cleanId}-${date_preset}`
     const cached = CACHE.get(cacheKey)
     if (cached && Date.now() - cached.ts < TTL) return NextResponse.json(cached.data)
+
+    // Check N8N webhook cache in Supabase first
+    if (supabaseClientId) {
+      try {
+        const supabase = await createServerSupabase()
+        const { data: webhookCache } = await supabase
+          .from('ads_cache')
+          .select('data, fetched_at')
+          .eq('client_id', supabaseClientId)
+          .eq('platform', 'google')
+          .eq('date_preset', date_preset ?? 'this_month')
+          .single()
+        if (webhookCache) {
+          const age = Date.now() - new Date(webhookCache.fetched_at).getTime()
+          // Use webhook cache if less than 6 hours old
+          if (age < 6 * 60 * 60 * 1000) {
+            const parsed = typeof webhookCache.data === 'string' ? JSON.parse(webhookCache.data) : webhookCache.data
+            return NextResponse.json({ ...parsed, _source: 'n8n_webhook', _fetched_at: webhookCache.fetched_at })
+          }
+        }
+      } catch {}
+    }
 
     const { start, end, prevStart, prevEnd } = buildDateRange(date_preset ?? 'this_month')
 
@@ -158,8 +182,9 @@ export async function POST(request: NextRequest) {
 
     let token = access_token
 
+    const mccClean = mcc_id?.replace(/-/g, '')
     async function runQuery(q: string) {
-      let result = await gaqlQuery(token, cleanId, devToken!, q)
+      let result = await gaqlQuery(token, cleanId, devToken!, q, mccClean)
       if (result.error === 'TOKEN_EXPIRED' || result.status === 401) {
         if (!refresh_token) return result
         const newToken = await refreshAccessToken(refresh_token)
@@ -171,7 +196,7 @@ export async function POST(request: NextRequest) {
             await supabase.from('ads_integrations').update({ access_token: newToken, updated_at: new Date().toISOString() }).eq('client_id', supabaseClientId).eq('platform', 'google')
           } catch {}
         }
-        return gaqlQuery(token, cleanId, devToken!, q)
+        return gaqlQuery(token, cleanId, devToken!, q, mccClean)
       }
       return result
     }

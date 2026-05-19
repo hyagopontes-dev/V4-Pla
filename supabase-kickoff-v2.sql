@@ -163,3 +163,26 @@ create table if not exists public.tasks (
 );
 alter table public.tasks disable row level security;
 create index if not exists tasks_client_id_idx on public.tasks(client_id);
+
+-- Add GA4 and MCC support to ads_integrations
+alter table public.ads_integrations
+  add column if not exists mcc_id text,
+  add column if not exists property_id text;
+
+-- Add GA4 as a platform option
+-- Note: platform check constraint needs updating if it exists
+-- Run this if you get constraint error:
+-- alter table public.ads_integrations drop constraint if exists ads_integrations_platform_check;
+-- alter table public.ads_integrations add constraint ads_integrations_platform_check check (platform in ('meta','google','ga4'));
+
+-- Cache table for N8N webhook data
+create table if not exists public.ads_cache (
+  id uuid default gen_random_uuid() primary key,
+  client_id uuid references public.clients(id) on delete cascade not null,
+  platform text not null,
+  date_preset text not null default 'this_month',
+  data jsonb not null,
+  fetched_at timestamptz default now(),
+  unique(client_id, platform, date_preset)
+);
+alter table public.ads_cache disable row level security;

@@ -15,6 +15,8 @@ export default function AdsIntegrationManager({ clientId, integrations: initial 
       access_token: existing?.access_token ?? '',
       account_id: existing?.account_id ?? '',
       refresh_token: existing?.refresh_token ?? '',
+      mcc_id: existing?.mcc_id ?? '',
+      property_id: existing?.property_id ?? '',
       active: existing?.active ?? true,
       exists: !!existing,
     }
@@ -34,6 +36,8 @@ export default function AdsIntegrationManager({ clientId, integrations: initial 
       access_token: data.access_token,
       account_id: data.account_id,
       refresh_token: data.refresh_token || null,
+      mcc_id: data.mcc_id || null,
+      property_id: data.property_id || null,
       active: data.active,
       updated_at: new Date().toISOString(),
     }
@@ -51,7 +55,7 @@ export default function AdsIntegrationManager({ clientId, integrations: initial 
 
   const PlatformCard = ({
     platform, label, logo, state, setState, showToken, setShowToken,
-    tokenLabel, accountLabel, accountPlaceholder, helpUrl, helpText, extraField
+    tokenLabel, accountLabel, accountPlaceholder, helpUrl, helpText, extraField, mccField, ga4Field
   }: any) => (
     <div className="border border-gray-100 rounded-xl p-4 space-y-3">
       <div className="flex items-center justify-between">
@@ -118,6 +122,38 @@ export default function AdsIntegrationManager({ clientId, integrations: initial 
         </div>
       )}
 
+      {mccField && (
+        <div>
+          <label className="label">{mccField.label}</label>
+          <input
+            className="input font-mono text-xs"
+            type="text"
+            placeholder={mccField.placeholder}
+            value={mccField.value}
+            onChange={e => mccField.onChange(e.target.value)}
+          />
+          <p className="text-xs text-gray-400 mt-1">
+            ID da conta MCC (gerenciadora). Permite acessar todas as contas filhas com um único token.
+          </p>
+        </div>
+      )}
+
+      {ga4Field && (
+        <div>
+          <label className="label">{ga4Field.label}</label>
+          <input
+            className="input font-mono text-xs"
+            type="text"
+            placeholder={ga4Field.placeholder}
+            value={ga4Field.value}
+            onChange={e => ga4Field.onChange(e.target.value)}
+          />
+          <p className="text-xs text-gray-400 mt-1">
+            Property ID do GA4 (somente números). Encontre em: GA4 → Admin → Property Settings.
+          </p>
+        </div>
+      )}
+
       <button
         onClick={() => savePlatform(platform, state)}
         disabled={saving === platform}
@@ -164,6 +200,18 @@ export default function AdsIntegrationManager({ clientId, integrations: initial 
             placeholder: 'Cole o refresh_token aqui...',
             value: google.refresh_token,
             onChange: (v: string) => setGoogle(g => ({ ...g, refresh_token: v }))
+          }}
+          mccField={{
+            label: 'MCC ID (Conta Gerenciadora)',
+            placeholder: '123-456-7890 (opcional, recomendado)',
+            value: google.mcc_id,
+            onChange: (v: string) => setGoogle(g => ({ ...g, mcc_id: v }))
+          }}
+          ga4Field={{
+            label: 'GA4 Property ID (opcional)',
+            placeholder: '123456789',
+            value: google.property_id,
+            onChange: (v: string) => setGoogle(g => ({ ...g, property_id: v }))
           }}
         />
       </div>

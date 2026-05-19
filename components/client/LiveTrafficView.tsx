@@ -340,6 +340,23 @@ export default function LiveTrafficView({ integrations, dashboardType = 'inside_
             </div>
           )}
 
+          {/* GA4 Channels */}
+          {hasGA4 && (data.channels ?? []).length > 0 && (
+            <div className="bg-black rounded-xl border border-white/10 p-5">
+              <SectionTitle>Canais Google Ads (via GA4)</SectionTitle>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                {(data.channels ?? []).map((ch: any, i: number) => (
+                  <div key={i} className="bg-gray-900 border border-white/5 rounded-xl p-4">
+                    <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">{ch.name}</p>
+                    <p className="text-xl font-bold text-white">{fNum(ch.sessions)}</p>
+                    <p className="text-xs text-gray-600 mt-1">sessões · {fNum(ch.conversions)} conv.</p>
+                    {ch.spend > 0 && <p className="text-xs text-gray-600">Gasto: {fBRL(ch.spend)}</p>}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Daily chart */}
           {(data.daily ?? []).length > 1 && (
             <div className="bg-black rounded-xl border border-white/10 p-5">
