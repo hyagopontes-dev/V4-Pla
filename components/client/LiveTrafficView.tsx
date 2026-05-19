@@ -122,7 +122,9 @@ export default function LiveTrafficView({ integrations, dashboardType = 'inside_
   const [showCalendar, setShowCalendar] = useState(false)
   const [calStart, setCalStart] = useState('')
   const [calEnd, setCalEnd] = useState('')
-  const [platform, setPlatform] = useState<'meta'|'google'>('meta')
+  const metaIntInit = integrations.find(i => i.platform === 'meta' && i.active)
+  const googleIntInit = integrations.find(i => i.platform === 'google' && i.active)
+  const [platform, setPlatform] = useState<'meta'|'google'>(metaIntInit ? 'meta' : 'google')
   const [data, setData] = useState<any>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -130,11 +132,9 @@ export default function LiveTrafficView({ integrations, dashboardType = 'inside_
   const [filterCampaign, setFilterCampaign] = useState('')
   const [filterAdset, setFilterAdset] = useState('')
 
-  const metaInt = integrations.find(i => i.platform === 'meta' && i.active)
-  const googleInt = integrations.find(i => i.platform === 'google' && i.active)
+  const metaInt = metaIntInit
+  const googleInt = googleIntInit
   const available = [metaInt && 'meta', googleInt && 'google'].filter(Boolean) as string[]
-  // Default to meta if available, else google
-  // Google integration only needs the N8N webhook URL configured
 
   const fetch_ = useCallback(async () => {
     const int = platform === 'meta' ? metaInt : googleInt
