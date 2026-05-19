@@ -341,7 +341,7 @@ export default function LiveTrafficView({ integrations, dashboardType = 'inside_
           )}
 
           {/* GA4 Channels */}
-          {hasGA4 && (data.channels ?? []).length > 0 && (
+          {(data.channels ?? []).length > 0 && (
             <div className="bg-black rounded-xl border border-white/10 p-5">
               <SectionTitle>Canais Google Ads (via GA4)</SectionTitle>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
