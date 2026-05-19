@@ -186,3 +186,6 @@ create table if not exists public.ads_cache (
   unique(client_id, platform, date_preset)
 );
 alter table public.ads_cache disable row level security;
+
+alter table public.ads_integrations
+  add column if not exists n8n_webhook_url text;

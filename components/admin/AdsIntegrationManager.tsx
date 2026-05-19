@@ -17,6 +17,7 @@ export default function AdsIntegrationManager({ clientId, integrations: initial 
       refresh_token: existing?.refresh_token ?? '',
       mcc_id: existing?.mcc_id ?? '',
       property_id: existing?.property_id ?? '',
+      n8n_webhook_url: existing?.n8n_webhook_url ?? '',
       active: existing?.active ?? true,
       exists: !!existing,
     }
@@ -38,6 +39,7 @@ export default function AdsIntegrationManager({ clientId, integrations: initial 
       refresh_token: data.refresh_token || null,
       mcc_id: data.mcc_id || null,
       property_id: data.property_id || null,
+      n8n_webhook_url: data.n8n_webhook_url || null,
       active: data.active,
       updated_at: new Date().toISOString(),
     }
@@ -55,7 +57,7 @@ export default function AdsIntegrationManager({ clientId, integrations: initial 
 
   const PlatformCard = ({
     platform, label, logo, state, setState, showToken, setShowToken,
-    tokenLabel, accountLabel, accountPlaceholder, helpUrl, helpText, extraField, mccField, ga4Field
+    tokenLabel, accountLabel, accountPlaceholder, helpUrl, helpText, extraField, mccField, ga4Field, webhookField
   }: any) => (
     <div className="border border-gray-100 rounded-xl p-4 space-y-3">
       <div className="flex items-center justify-between">
@@ -154,6 +156,22 @@ export default function AdsIntegrationManager({ clientId, integrations: initial 
         </div>
       )}
 
+      {webhookField && (
+        <div>
+          <label className="label">{webhookField.label}</label>
+          <input
+            className="input font-mono text-xs"
+            type="url"
+            placeholder={webhookField.placeholder}
+            value={webhookField.value}
+            onChange={e => webhookField.onChange(e.target.value)}
+          />
+          <p className="text-xs text-gray-400 mt-1">
+            URL do webhook N8N para buscar dados do Google Ads em tempo real.
+          </p>
+        </div>
+      )}
+
       <button
         onClick={() => savePlatform(platform, state)}
         disabled={saving === platform}
@@ -212,6 +230,12 @@ export default function AdsIntegrationManager({ clientId, integrations: initial 
             placeholder: '123456789',
             value: google.property_id,
             onChange: (v: string) => setGoogle(g => ({ ...g, property_id: v }))
+          }}
+          webhookField={{
+            label: '🔗 N8N Webhook URL (Google Ads)',
+            placeholder: 'https://seu-n8n.cloud/webhook/xxxxx',
+            value: google.n8n_webhook_url,
+            onChange: (v: string) => setGoogle(g => ({ ...g, n8n_webhook_url: v }))
           }}
         />
       </div>
