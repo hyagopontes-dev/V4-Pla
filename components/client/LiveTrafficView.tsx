@@ -160,7 +160,7 @@ export default function LiveTrafficView({ integrations, dashboardType = 'inside_
 
   if (!available.length) return null
 
-  const cur = data?.current
+  const cur = data?.current  // works for both Meta (current) and Google (current)
   const prev = data?.previous
   const campaigns: any[] = data?.campaigns ?? []
   const daily: any[] = data?.daily ?? []
@@ -277,7 +277,96 @@ export default function LiveTrafficView({ integrations, dashboardType = 'inside_
         </div>
       )}
 
-      {cur && (
+      {data && platform === 'google' && data.current && (
+        // ═══════════════════════════════════════════
+        // GOOGLE ADS DASHBOARD
+        // ═══════════════════════════════════════════
+        <div className="space-y-5">
+          {/* Visão Geral */}
+          <div className="bg-black rounded-xl border border-white/10 p-5">
+            <SectionTitle>Visão Geral — Google Ads</SectionTitle>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <KpiCard label="Valor Gasto" value={data.current.spend} prev={data.previous?.spend} prevLabel={data.prev_period?.split(' → ')[0]?.slice(5)} format="brl" accent />
+              <KpiCard label="Cliques" value={data.current.clicks} prev={data.previous?.clicks} prevLabel={data.prev_period?.split(' → ')[0]?.slice(5)} />
+              <KpiCard label="Impressões" value={data.current.impressions} prev={data.previous?.impressions} prevLabel={data.prev_period?.split(' → ')[0]?.slice(5)} />
+              <KpiCard label="CTR" value={data.current.ctr} prev={data.previous?.ctr} prevLabel={data.prev_period?.split(' → ')[0]?.slice(5)} format="pct" />
+              <KpiCard label="CPC" value={data.current.cpc} prev={data.previous?.cpc} prevLabel={data.prev_period?.split(' → ')[0]?.slice(5)} format="brl" />
+              <KpiCard label="CPM" value={data.current.cpm} prev={data.previous?.cpm} prevLabel={data.prev_period?.split(' → ')[0]?.slice(5)} format="brl" />
+              {data.current.conversions > 0 && <KpiCard label="Conversões" value={data.current.conversions} prev={data.previous?.conversions} prevLabel={data.prev_period?.split(' → ')[0]?.slice(5)} />}
+              {data.current.cpa > 0 && <KpiCard label="Custo/Conversão" value={data.current.cpa} prev={data.previous?.cpa} prevLabel={data.prev_period?.split(' → ')[0]?.slice(5)} format="brl" />}
+              {data.current.roas > 0 && <KpiCard label="ROAS" value={data.current.roas} prev={data.previous?.roas} prevLabel={data.prev_period?.split(' → ')[0]?.slice(5)} format="x" />}
+            </div>
+          </div>
+
+          {/* Campanhas */}
+          {(data.campaigns ?? []).length > 0 && (
+            <div className="bg-black rounded-xl border border-white/10 overflow-hidden">
+              <div className="px-5 py-4 border-b border-white/10">
+                <SectionTitle>Campanhas</SectionTitle>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs">
+                  <thead>
+                    <tr className="border-b border-white/5 text-gray-500">
+                      <th className="text-left px-5 py-3 font-medium">Campanha</th>
+                      <th className="text-right px-4 py-3 font-medium">Gasto</th>
+                      <th className="text-right px-4 py-3 font-medium">Impressões</th>
+                      <th className="text-right px-4 py-3 font-medium">Cliques</th>
+                      <th className="text-right px-4 py-3 font-medium">CTR</th>
+                      <th className="text-right px-4 py-3 font-medium">CPC</th>
+                      <th className="text-right px-4 py-3 font-medium">Conv.</th>
+                      <th className="text-right px-5 py-3 font-medium">CPA</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {(data.campaigns ?? []).map((c: any, i: number) => (
+                      <tr key={i} className="border-b border-white/5 hover:bg-white/5">
+                        <td className="px-5 py-3 max-w-[200px]">
+                          <p className="text-white font-medium truncate">{c.name}</p>
+                          {c.type && <p className="text-gray-600 mt-0.5">{c.type}</p>}
+                        </td>
+                        <td className="px-4 py-3 text-right text-red-400 font-semibold">{fBRL(c.spend)}</td>
+                        <td className="px-4 py-3 text-right text-gray-300">{fNum(c.impressions)}</td>
+                        <td className="px-4 py-3 text-right text-gray-300">{fNum(c.clicks)}</td>
+                        <td className="px-4 py-3 text-right text-gray-300">{fPct(c.ctr)}</td>
+                        <td className="px-4 py-3 text-right text-gray-300">{c.cpc > 0 ? fBRL(c.cpc) : '—'}</td>
+                        <td className="px-4 py-3 text-right text-green-400 font-bold">{c.conversions > 0 ? fNum(c.conversions) : '—'}</td>
+                        <td className="px-5 py-3 text-right text-gray-300">{c.cpa > 0 ? fBRL(c.cpa) : '—'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {/* Daily chart */}
+          {(data.daily ?? []).length > 1 && (
+            <div className="bg-black rounded-xl border border-white/10 p-5">
+              <SectionTitle>Evolução diária</SectionTitle>
+              <div className="grid grid-cols-2 gap-5">
+                {[
+                  { label: 'Investimento', field: 'spend', color: '#dc2626' },
+                  { label: 'Cliques', field: 'clicks', color: '#3b82f6' },
+                  { label: 'Impressões', field: 'impressions', color: '#a855f7' },
+                  { label: 'Conversões', field: 'conversions', color: '#22c55e' },
+                ].map(({ label, field, color }) => (
+                  <div key={field}>
+                    <p className="text-xs text-gray-500 mb-1">{label}</p>
+                    <MiniBar data={data.daily} field={field} color={color} />
+                  </div>
+                ))}
+              </div>
+              <div className="flex justify-between text-xs text-gray-600 mt-2">
+                <span>{data.daily[0]?.date?.slice(5)}</span>
+                <span>{data.daily[data.daily.length-1]?.date?.slice(5)}</span>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {data && platform !== 'google' && cur && (
         isEcom ? (
           // ═══════════════════════════════════════════
           // E-COMMERCE DASHBOARD
