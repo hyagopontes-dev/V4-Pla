@@ -133,21 +133,29 @@ export default function LiveTrafficView({ integrations, dashboardType = 'inside_
   const metaInt = integrations.find(i => i.platform === 'meta' && i.active)
   const googleInt = integrations.find(i => i.platform === 'google' && i.active)
   const available = [metaInt && 'meta', googleInt && 'google'].filter(Boolean) as string[]
+  // Default to meta if available, else google
+  // Google integration only needs the N8N webhook URL configured
 
   const fetch_ = useCallback(async () => {
     const int = platform === 'meta' ? metaInt : googleInt
-    if (!int?.access_token) return
+    if (!int) return
+    // Meta requires access_token; Google uses N8N webhook (only needs client_id)
+    if (platform === 'meta' && !int.access_token) return
     setLoading(true); setError('')
     try {
       const res = await fetch(`/api/ads/${platform}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          access_token: int.access_token, account_id: int.account_id,
-          date_preset: preset, dashboard_type: dashboardType,
-          refresh_token: (int as any).refresh_token ?? null, client_id: int.client_id,
-          filter_campaign_id: filterCampaign || undefined, filter_adset_id: filterAdset || undefined,
-        }),
+        body: JSON.stringify(
+          platform === 'google'
+            ? { client_id: int.client_id, date_preset: preset }
+            : {
+                access_token: int.access_token, account_id: int.account_id,
+                date_preset: preset, dashboard_type: dashboardType,
+                refresh_token: (int as any).refresh_token ?? null, client_id: int.client_id,
+                filter_campaign_id: filterCampaign || undefined, filter_adset_id: filterAdset || undefined,
+              }
+        ),
       })
       const json = await res.json()
       if (!res.ok || json.error) throw new Error(json.error ?? 'Erro')
