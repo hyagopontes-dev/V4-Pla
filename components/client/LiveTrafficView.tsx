@@ -136,6 +136,14 @@ export default function LiveTrafficView({ integrations, dashboardType = 'inside_
   const googleInt = googleIntInit
   const available = [metaInt && 'meta', googleInt && 'google'].filter(Boolean) as string[]
 
+  function switchPlatform(p: 'meta' | 'google') {
+    setPlatform(p)
+    setData(null)
+    setError('')
+    setFilterCampaign('')
+    setFilterAdset('')
+  }
+
   const fetch_ = useCallback(async () => {
     const int = platform === 'meta' ? metaInt : googleInt
     if (!int) return
@@ -201,7 +209,7 @@ export default function LiveTrafficView({ integrations, dashboardType = 'inside_
 
         <div className="flex items-center gap-2 flex-wrap">
           {available.length > 1 && available.map(p => (
-            <button key={p} onClick={() => setPlatform(p as any)}
+            <button key={p} onClick={() => switchPlatform(p as any)}
               className={`text-xs px-3 py-1.5 rounded-lg border font-medium transition-colors ${platform===p?'bg-white text-black border-white':'bg-gray-900 border-white/10 text-gray-400 hover:text-white'}`}>
               {p==='meta'?'📘 Meta Ads':'🔵 Google Ads'}
             </button>
