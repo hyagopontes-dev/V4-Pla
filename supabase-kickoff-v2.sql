@@ -189,3 +189,15 @@ alter table public.ads_cache disable row level security;
 
 alter table public.ads_integrations
   add column if not exists n8n_webhook_url text;
+
+-- Team members table
+create table if not exists public.team_members (
+  id uuid default gen_random_uuid() primary key,
+  name text not null,
+  email text,
+  role text,
+  avatar_color text default '#F5C518',
+  active boolean default true,
+  created_at timestamptz default now()
+);
+alter table public.team_members disable row level security;

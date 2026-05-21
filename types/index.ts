@@ -209,3 +209,13 @@ export interface Task {
   created_at: string
   updated_at: string
 }
+
+export interface TeamMember {
+  id: string
+  name: string
+  email?: string
+  role?: string
+  avatar_color: string
+  active: boolean
+  created_at: string
+}

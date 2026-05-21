@@ -6,7 +6,7 @@ import { Task } from '@/types'
 import { Plus, X, Check, ChevronDown, Calendar, User, Flag, Search, Filter, Bold, Italic, List, ChevronUp } from 'lucide-react'
 
 interface Client { id: string; name: string; slug: string }
-interface Props { clients: Client[]; initialTasks: Task[] }
+interface Props { clients: Client[]; initialTasks: Task[]; team: any[] }
 
 const PDCA = {
   plan: { label: 'PLAN', color: '#6366f1', bg: 'rgba(99,102,241,0.12)', border: 'rgba(99,102,241,0.3)', desc: 'Planejar — meta e método definidos' },
@@ -137,7 +137,10 @@ function TaskCard({ task, clientName, onUpdate, onDelete }: {
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px' }}>
             <div>
               <label className="label">Responsável</label>
-              <input className="input" style={{ fontSize: '12px' }} value={form.responsible} onChange={e => setForm(f => ({ ...f, responsible: e.target.value }))} />
+              <select className="input" style={{ fontSize: '12px' }} value={form.responsible} onChange={e => setForm(f => ({ ...f, responsible: e.target.value }))}>
+                <option value="">Sem responsável</option>
+                {team.map((m: any) => <option key={m.id} value={m.name}>{m.name}{m.role ? ` — ${m.role}` : ''}</option>)}
+              </select>
             </div>
             <div>
               <label className="label">Prazo</label>
@@ -223,7 +226,7 @@ function TaskCard({ task, clientName, onUpdate, onDelete }: {
   )
 }
 
-export default function TaskBoard({ clients, initialTasks }: Props) {
+export default function TaskBoard({ clients, initialTasks, team }: Props) {
   const [tasks, setTasks] = useState<Task[]>(initialTasks)
   const [filterClient, setFilterClient] = useState('')
   const [filterResponsible, setFilterResponsible] = useState('')
@@ -234,11 +237,8 @@ export default function TaskBoard({ clients, initialTasks }: Props) {
   const [newForm, setNewForm] = useState({ client_id: '', title: '', description: '', responsible: '', due_date: '', priority: 'media' as Task['priority'], pdca: 'plan' as Task['pdca'] })
   const supabase = createClient()
 
-  // All responsibles for filter
-  const responsibles = useMemo(() => {
-    const set = new Set(tasks.map(t => t.responsible).filter(Boolean) as string[])
-    return Array.from(set).sort()
-  }, [tasks])
+  // Use team members for filter
+  const responsibles = team.map((m: any) => m.name)
 
   // Filter tasks
   const filtered = useMemo(() => {
@@ -358,7 +358,7 @@ export default function TaskBoard({ clients, initialTasks }: Props) {
 
       {/* New task form */}
       {showNew && (
-        <div className="card" style={{ marginBottom: '20px', borderColor: 'var(--yellow)', borderWidth: '1px' }}>
+        <div id="new-task-form" className="card" style={{ marginBottom: '20px', borderColor: 'var(--yellow)', borderWidth: '1px' }}>
           <div style={{ fontSize: '10px', letterSpacing: '0.15em', textTransform: 'uppercase', color: 'var(--yellow)', fontWeight: 600, marginBottom: '14px' }}>Nova Tarefa</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
@@ -378,7 +378,10 @@ export default function TaskBoard({ clients, initialTasks }: Props) {
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px' }}>
               <div>
                 <label className="label">Responsável</label>
-                <input className="input" placeholder="Nome..." value={newForm.responsible} onChange={e => setNewForm(f => ({ ...f, responsible: e.target.value }))} />
+                <select className="input" value={newForm.responsible} onChange={e => setNewForm(f => ({ ...f, responsible: e.target.value }))}>
+                  <option value="">Sem responsável</option>
+                  {team.map((m: any) => <option key={m.id} value={m.name}>{m.name}{m.role ? ` — ${m.role}` : ''}</option>)}
+                </select>
               </div>
               <div>
                 <label className="label">Prazo</label>
@@ -433,6 +436,11 @@ export default function TaskBoard({ clients, initialTasks }: Props) {
                     <div style={{ height: '100%', width: `${pct}%`, background: 'var(--yellow)', borderRadius: '2px', transition: 'width 0.5s' }} />
                   </div>
                   <span style={{ fontSize: '11px', color: 'var(--yellow)', fontWeight: 700 }}>{pct}%</span>
+                  <button
+                    onClick={() => { setNewForm(f => ({ ...f, client_id: clientId })); setShowNew(true); setTimeout(() => document.getElementById('new-task-form')?.scrollIntoView({ behavior: 'smooth' }), 50) }}
+                    style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '10px', color: 'var(--yellow)', background: 'var(--yellow-bg)', border: '1px solid var(--yellow-border)', borderRadius: '2px', padding: '3px 10px', cursor: 'pointer', letterSpacing: '0.08em', textTransform: 'uppercase', fontWeight: 600 }}>
+                    <Plus size={10} /> Tarefa
+                  </button>
                 </div>
 
                 {/* Tasks */}
