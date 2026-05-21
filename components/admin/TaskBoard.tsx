@@ -107,8 +107,8 @@ function RichEditor({ value, onChange, placeholder = 'Descrição...' }: { value
   )
 }
 
-function TaskCard({ task, clientName, onUpdate, onDelete }: {
-  task: Task; clientName: string
+function TaskCard({ task, clientName, onUpdate, onDelete, team }: {
+  task: Task; clientName: string; team: any[]
   onUpdate: (id: string, updates: Partial<Task>) => void
   onDelete: (id: string) => void
 }) {
@@ -455,7 +455,7 @@ export default function TaskBoard({ clients, initialTasks, team }: Props) {
                       return prioOrder[a.priority] - prioOrder[b.priority]
                     })
                     .map(task => (
-                      <TaskCard key={task.id} task={task} clientName={client?.name ?? ''} onUpdate={updateTask} onDelete={deleteTask} />
+                      <TaskCard key={task.id} task={task} clientName={client?.name ?? ''} onUpdate={updateTask} onDelete={deleteTask} team={team} />
                     ))}
                 </div>
               </div>
