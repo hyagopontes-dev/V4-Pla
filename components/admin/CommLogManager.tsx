@@ -114,7 +114,11 @@ export default function CommLogManager({ clientId, logs: initial }: Props) {
 
   async function saveLog(log: CommLog) {
     setSaving(log.id)
-    await supabase.from('comm_logs').update({ content: log.content, updated_at: new Date().toISOString() }).eq('id', log.id)
+    // Read directly from DOM in case state wasn't updated
+    const editorEl = document.querySelector('[contenteditable]') as HTMLDivElement
+    const content = editorEl?.innerHTML || log.content || ''
+    await supabase.from('comm_logs').update({ content, updated_at: new Date().toISOString() }).eq('id', log.id)
+    setLogs(prev => prev.map(l => l.id === log.id ? { ...l, content } : l))
     setSaving(null)
   }
 
