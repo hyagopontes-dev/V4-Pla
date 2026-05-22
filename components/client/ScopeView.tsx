@@ -72,16 +72,20 @@ export default function ScopeView({ scope, objectives }: Props) {
               <p style={{ fontSize: '13px', color: 'var(--text-secondary)', textAlign: 'center', padding: '16px 0' }}>
                 Nenhum objetivo registrado.
               </p>
-            ) : activeObjs.map(obj => (
-              <div key={obj.id} style={{
-                display: 'flex', alignItems: 'flex-start', gap: '12px',
-                padding: '10px 14px', background: 'var(--bg-hover)',
-                border: '1px solid var(--border)', borderRadius: '2px'
-              }}>
-                <div style={{ width: '6px', height: '6px', background: 'var(--yellow)', borderRadius: '1px', marginTop: '5px', flexShrink: 0 }} />
-                <p style={{ fontSize: '13px', color: 'var(--text)', lineHeight: 1.5 }}>{obj.content}</p>
-              </div>
-            ))}
+            ) : activeObjs.map(obj => {
+              // Split content by newlines to show each line as a separate item
+              const lines = obj.content.split('\n').map(l => l.trim()).filter(Boolean)
+              return lines.map((line, i) => (
+                <div key={`${obj.id}-${i}`} style={{
+                  display: 'flex', alignItems: 'flex-start', gap: '12px',
+                  padding: '10px 14px', background: 'var(--bg-hover)',
+                  border: '1px solid var(--border)', borderRadius: '2px'
+                }}>
+                  <div style={{ width: '6px', height: '6px', background: 'var(--yellow)', borderRadius: '1px', marginTop: '5px', flexShrink: 0 }} />
+                  <p style={{ fontSize: '13px', color: 'var(--text)', lineHeight: 1.5 }}>{line}</p>
+                </div>
+              ))
+            })}
           </div>
         </div>
       )}
