@@ -1,11 +1,30 @@
 'use client'
-import { MonthlyObjective, MONTH_FULL } from '@/types'
+import { useState } from 'react'
+import { MonthlyObjective, MONTH_NAMES, MONTH_FULL } from '@/types'
 import { FileText } from 'lucide-react'
 
 interface Props { scope?: string | null; objectives: MonthlyObjective[] }
 
 export default function ScopeView({ scope, objectives }: Props) {
+  const sorted = [...objectives].sort((a, b) =>
+    a.year !== b.year ? b.year - a.year : b.month - a.month
+  )
+  const [activeKey, setActiveKey] = useState(
+    sorted.length ? `${sorted[0].year}-${String(sorted[0].month).padStart(2,'0')}` : ''
+  )
+
   if (!scope && !objectives.length) return null
+
+  // Group by month
+  const groups: Record<string, MonthlyObjective[]> = {}
+  sorted.forEach(obj => {
+    const key = `${obj.year}-${String(obj.month).padStart(2,'0')}`
+    if (!groups[key]) groups[key] = []
+    groups[key].push(obj)
+  })
+  const monthKeys = Object.keys(groups).sort().reverse()
+  const activeObjs = groups[activeKey] ?? []
+  const [activeYear, activeMonth] = activeKey.split('-').map(Number)
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
@@ -21,45 +40,51 @@ export default function ScopeView({ scope, objectives }: Props) {
         </div>
       )}
 
-      {objectives.length > 0 && (() => {
-        // Group objectives by month/year
-        const groups: Record<string, MonthlyObjective[]> = {}
-        objectives.forEach(obj => {
-          const key = `${obj.year}-${String(obj.month).padStart(2,'0')}`
-          if (!groups[key]) groups[key] = []
-          groups[key].push(obj)
-        })
-        const sorted = Object.entries(groups).sort((a, b) => b[0].localeCompare(a[0]))
-        return (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            {sorted.map(([key, objs]) => {
-              const [year, month] = key.split('-').map(Number)
+      {objectives.length > 0 && (
+        <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
+          <div style={{ padding: '14px 20px', borderBottom: '1px solid var(--border)' }}>
+            <h2 style={{ fontWeight: 500, color: 'var(--text)', fontSize: '14px' }}>Objetivos do Mês</h2>
+          </div>
+
+          {/* Month tabs */}
+          <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--border)', display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+            {monthKeys.map(key => {
+              const [y, m] = key.split('-').map(Number)
+              const active = key === activeKey
               return (
-                <div key={key} className="card" style={{ padding: 0, overflow: 'hidden' }}>
-                  <div style={{ padding: '14px 20px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <h2 style={{ fontWeight: 500, color: 'var(--text)', fontSize: '14px' }}>Objetivos do Mês</h2>
-                    <span style={{ fontSize: '11px', color: 'var(--yellow)', fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase' }}>
-                      {MONTH_FULL[month - 1]} {year}
-                    </span>
-                  </div>
-                  <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                    {objs.map(obj => (
-                      <div key={obj.id} style={{
-                        display: 'flex', alignItems: 'flex-start', gap: '12px',
-                        padding: '10px 14px', background: 'var(--bg-hover)',
-                        border: '1px solid var(--border)', borderRadius: '2px'
-                      }}>
-                        <div style={{ width: '6px', height: '6px', background: 'var(--yellow)', borderRadius: '1px', marginTop: '5px', flexShrink: 0 }} />
-                        <p style={{ fontSize: '13px', color: 'var(--text)', lineHeight: 1.5 }}>{obj.content}</p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
+                <button key={key} onClick={() => setActiveKey(key)} style={{
+                  fontSize: '11px', padding: '4px 12px', borderRadius: '2px',
+                  border: `1px solid ${active ? 'var(--yellow)' : 'var(--border)'}`,
+                  background: active ? 'var(--yellow-bg)' : 'transparent',
+                  color: active ? 'var(--yellow)' : 'var(--text-secondary)',
+                  cursor: 'pointer', fontWeight: active ? 600 : 400,
+                  letterSpacing: '0.05em', transition: 'all 0.15s'
+                }}>
+                  {MONTH_NAMES[m - 1]} {y}
+                </button>
               )
             })}
           </div>
-        )
-      })()}
+
+          {/* Objectives for selected month */}
+          <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            {activeObjs.length === 0 ? (
+              <p style={{ fontSize: '13px', color: 'var(--text-secondary)', textAlign: 'center', padding: '16px 0' }}>
+                Nenhum objetivo registrado.
+              </p>
+            ) : activeObjs.map(obj => (
+              <div key={obj.id} style={{
+                display: 'flex', alignItems: 'flex-start', gap: '12px',
+                padding: '10px 14px', background: 'var(--bg-hover)',
+                border: '1px solid var(--border)', borderRadius: '2px'
+              }}>
+                <div style={{ width: '6px', height: '6px', background: 'var(--yellow)', borderRadius: '1px', marginTop: '5px', flexShrink: 0 }} />
+                <p style={{ fontSize: '13px', color: 'var(--text)', lineHeight: 1.5 }}>{obj.content}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   )
 }
