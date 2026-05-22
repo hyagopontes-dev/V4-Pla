@@ -252,15 +252,20 @@ export default function TaskBoard({ clients, initialTasks, team }: Props) {
     })
   }, [tasks, filterClient, filterResponsible, filterPdca, filterPriority, search])
 
-  // Group by client
+  // Group by client - stable order based on clients prop
   const grouped = useMemo(() => {
     const map: Record<string, Task[]> = {}
     filtered.forEach(t => {
       if (!map[t.client_id]) map[t.client_id] = []
       map[t.client_id].push(t)
     })
-    return map
-  }, [filtered])
+    // Return ordered by clients prop order (stable)
+    const ordered: Record<string, Task[]> = {}
+    clients.forEach(c => { if (map[c.id]) ordered[c.id] = map[c.id] })
+    // Add any client_ids not in clients list at the end
+    Object.keys(map).forEach(id => { if (!ordered[id]) ordered[id] = map[id] })
+    return ordered
+  }, [filtered, clients])
 
   // Stats
   const stats = useMemo(() => ({
