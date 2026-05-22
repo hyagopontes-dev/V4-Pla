@@ -184,6 +184,7 @@ export default function CommLogManager({ clientId, logs: initial }: Props) {
                 {MONTH_FULL[active.month - 1]} {active.year}
               </p>
               <RichEditor
+                key={active.id}
                 value={active.content ?? ''}
                 onChange={v => setLogs(prev => prev.map(l => l.id === active.id ? { ...l, content: v } : l))}
               />

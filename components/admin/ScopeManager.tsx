@@ -43,14 +43,7 @@ export default function ScopeManager({ client, monthlyObjectives: initial }: Pro
 
   async function addObjective() {
     if (!objForm.content.trim()) return
-    const exists = objectives.find(o => o.month === parseInt(objForm.month) && o.year === parseInt(objForm.year))
-    if (exists) {
-      setObjectives(prev => prev.map(o => o.id === exists.id ? { ...o, content: objForm.content } : o))
-      await supabase.from('monthly_objectives').update({ content: objForm.content, updated_at: new Date().toISOString() }).eq('id', exists.id)
-      setShowObjForm(false)
-      setObjForm(f => ({ ...f, content: '' }))
-      return
-    }
+    // Always insert a new objective (multiple per month allowed)
     const { data } = await supabase.from('monthly_objectives').insert({
       client_id: client.id,
       month: parseInt(objForm.month),
@@ -59,8 +52,8 @@ export default function ScopeManager({ client, monthlyObjectives: initial }: Pro
     }).select().single()
     if (data) {
       setObjectives(prev => [data, ...prev])
-      setShowObjForm(false)
       setObjForm(f => ({ ...f, content: '' }))
+      // Keep form open to add more
     }
   }
 
