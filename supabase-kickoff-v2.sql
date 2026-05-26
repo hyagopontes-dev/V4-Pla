@@ -212,3 +212,134 @@ create table if not exists public.client_team (
   unique(client_id, team_member_id)
 );
 alter table public.client_team disable row level security;
+
+-- ═══════════════════════════════════════════
+-- COMMERCIAL PANEL
+-- ═══════════════════════════════════════════
+
+-- Deals / pipeline
+create table if not exists public.deals (
+  id uuid default gen_random_uuid() primary key,
+  title text not null,
+  company text,
+  contact_name text,
+  contact_email text,
+  responsible text, -- team member name
+  responsible_id uuid references public.team_members(id),
+  stage text not null default 'lead' check (stage in ('lead','qualified','proposal','negotiation','closed_won','closed_lost')),
+  value numeric(12,2) default 0,
+  probability int default 0 check (probability between 0 and 100),
+  origin text default 'inbound' check (origin in ('inbound','referral','outbound','event','other')),
+  service_type text, -- gestao_midia, social_media, seo, branding, etc
+  first_contact_at date,
+  proposal_sent_at date,
+  closed_at date,
+  expected_close_date date,
+  lost_reason text,
+  notes text,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+alter table public.deals disable row level security;
+
+-- Sales activities
+create table if not exists public.sales_activities (
+  id uuid default gen_random_uuid() primary key,
+  deal_id uuid references public.deals(id) on delete cascade,
+  responsible_id uuid references public.team_members(id),
+  responsible text,
+  type text not null check (type in ('call','email','meeting','follow_up','proposal','other')),
+  notes text,
+  done boolean default true,
+  scheduled_for timestamptz,
+  done_at timestamptz default now(),
+  created_at timestamptz default now()
+);
+alter table public.sales_activities disable row level security;
+
+-- Sales goals (per member per month)
+create table if not exists public.sales_goals (
+  id uuid default gen_random_uuid() primary key,
+  team_member_id uuid references public.team_members(id) on delete cascade,
+  month int not null,
+  year int not null,
+  goal_revenue numeric(12,2) default 0,
+  goal_deals int default 0,
+  unique(team_member_id, month, year)
+);
+alter table public.sales_goals disable row level security;
+
+-- ═══════════════════════════════════════════
+-- CUSTOMER SUCCESS PANEL
+-- ═══════════════════════════════════════════
+
+-- Client CS stage & health
+create table if not exists public.client_cs (
+  id uuid default gen_random_uuid() primary key,
+  client_id uuid references public.clients(id) on delete cascade not null unique,
+  cs_owner_id uuid references public.team_members(id),
+  cs_owner text,
+  stage text not null default 'estruturacao' check (stage in ('estruturacao','estavel','escala','alerta')),
+  stage_changed_at timestamptz default now(),
+  health_score int default 100 check (health_score between 0 and 100),
+  health_updated_at timestamptz default now(),
+  nps_score int check (nps_score between 0 and 10),
+  nps_updated_at timestamptz,
+  last_contact_at timestamptz,
+  last_meeting_at timestamptz,
+  mrr numeric(12,2) default 0,
+  churn_risk boolean default false,
+  upsell_opportunity boolean default false,
+  upsell_value numeric(12,2) default 0,
+  payment_on_time boolean default true,
+  notes text,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+alter table public.client_cs disable row level security;
+
+-- CS stage history log
+create table if not exists public.client_cs_history (
+  id uuid default gen_random_uuid() primary key,
+  client_id uuid references public.clients(id) on delete cascade not null,
+  changed_by text,
+  from_stage text,
+  to_stage text,
+  reason text,
+  created_at timestamptz default now()
+);
+alter table public.client_cs_history disable row level security;
+
+-- NPS responses
+create table if not exists public.nps_responses (
+  id uuid default gen_random_uuid() primary key,
+  client_id uuid references public.clients(id) on delete cascade not null,
+  score int not null check (score between 0 and 10),
+  comment text,
+  responded_at timestamptz default now()
+);
+alter table public.nps_responses disable row level security;
+
+-- CS activities / tickets
+create table if not exists public.cs_activities (
+  id uuid default gen_random_uuid() primary key,
+  client_id uuid references public.clients(id) on delete cascade not null,
+  cs_owner_id uuid references public.team_members(id),
+  cs_owner text,
+  type text not null check (type in ('meeting','call','email','ticket','checkin','other')),
+  notes text,
+  done boolean default true,
+  scheduled_for timestamptz,
+  done_at timestamptz default now(),
+  created_at timestamptz default now()
+);
+alter table public.cs_activities disable row level security;
+
+-- Health score history (for trend)
+create table if not exists public.health_score_history (
+  id uuid default gen_random_uuid() primary key,
+  client_id uuid references public.clients(id) on delete cascade not null,
+  score int not null,
+  recorded_at timestamptz default now()
+);
+alter table public.health_score_history disable row level security;

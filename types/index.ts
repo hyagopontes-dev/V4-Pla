@@ -219,3 +219,92 @@ export interface TeamMember {
   active: boolean
   created_at: string
 }
+
+export interface Deal {
+  id: string
+  title: string
+  company?: string
+  contact_name?: string
+  contact_email?: string
+  responsible?: string
+  responsible_id?: string
+  stage: 'lead' | 'qualified' | 'proposal' | 'negotiation' | 'closed_won' | 'closed_lost'
+  value: number
+  probability: number
+  origin: 'inbound' | 'referral' | 'outbound' | 'event' | 'other'
+  service_type?: string
+  first_contact_at?: string
+  proposal_sent_at?: string
+  closed_at?: string
+  expected_close_date?: string
+  lost_reason?: string
+  notes?: string
+  created_at: string
+  updated_at: string
+}
+
+export interface SalesActivity {
+  id: string
+  deal_id?: string
+  responsible_id?: string
+  responsible?: string
+  type: 'call' | 'email' | 'meeting' | 'follow_up' | 'proposal' | 'other'
+  notes?: string
+  done: boolean
+  scheduled_for?: string
+  done_at?: string
+  created_at: string
+}
+
+export interface SalesGoal {
+  id: string
+  team_member_id: string
+  month: number
+  year: number
+  goal_revenue: number
+  goal_deals: number
+}
+
+export interface ClientCS {
+  id: string
+  client_id: string
+  cs_owner_id?: string
+  cs_owner?: string
+  stage: 'estruturacao' | 'estavel' | 'escala' | 'alerta'
+  stage_changed_at: string
+  health_score: number
+  health_updated_at: string
+  nps_score?: number
+  nps_updated_at?: string
+  last_contact_at?: string
+  last_meeting_at?: string
+  mrr: number
+  churn_risk: boolean
+  upsell_opportunity: boolean
+  upsell_value: number
+  payment_on_time: boolean
+  notes?: string
+  created_at: string
+  updated_at: string
+}
+
+export interface NPSResponse {
+  id: string
+  client_id: string
+  score: number
+  comment?: string
+  responded_at: string
+}
+
+export interface CSActivity {
+  id: string
+  client_id: string
+  cs_owner_id?: string
+  cs_owner?: string
+  type: 'meeting' | 'call' | 'email' | 'ticket' | 'checkin' | 'other'
+  notes?: string
+  done: boolean
+  scheduled_for?: string
+  done_at?: string
+  created_at: string
+}
