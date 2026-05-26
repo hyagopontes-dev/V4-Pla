@@ -5,7 +5,11 @@ import ClientSearch from '@/components/admin/ClientSearch'
 
 export default async function AdminHome() {
   const supabase = await createServerSupabase()
-  const { data: clients } = await supabase.from('clients').select('*').order('name')
+  const [{ data: clients }, { data: team }, { data: clientTeam }] = await Promise.all([
+    supabase.from('clients').select('*').order('name'),
+    supabase.from('team_members').select('*').eq('active', true).order('name'),
+    supabase.from('client_team').select('*, team_members(id, name, avatar_color, role)'),
+  ])
   const total = clients?.length ?? 0
   const active = clients?.filter(c => c.active).length ?? 0
 
@@ -42,7 +46,7 @@ export default async function AdminHome() {
         <div style={{ padding: '14px 20px', borderBottom: '1px solid var(--border)' }}>
           <div className="section-label">Clientes</div>
         </div>
-        <ClientSearch clients={clients ?? []} />
+        <ClientSearch clients={clients ?? []} team={team ?? []} clientTeam={clientTeam ?? []} />
       </div>
     </div>
   )

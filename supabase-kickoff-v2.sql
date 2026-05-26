@@ -201,3 +201,14 @@ create table if not exists public.team_members (
   created_at timestamptz default now()
 );
 alter table public.team_members disable row level security;
+
+-- Client team assignments
+create table if not exists public.client_team (
+  id uuid default gen_random_uuid() primary key,
+  client_id uuid references public.clients(id) on delete cascade not null,
+  team_member_id uuid references public.team_members(id) on delete cascade not null,
+  role_in_client text, -- ex: "Gestor", "Tráfego"
+  created_at timestamptz default now(),
+  unique(client_id, team_member_id)
+);
+alter table public.client_team disable row level security;
