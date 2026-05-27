@@ -155,7 +155,7 @@ export default function ClientCSEditor({ client, cs: initialCS, npsResponses: in
                   <label className="label">Estágio</label>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px' }}>
                     {Object.entries(STAGES).map(([key, s]) => (
-                      <button key={key} onClick={() => setForm(f => ({ ...f, stage: key }))}
+                      <button key={key} onClick={() => setForm(f => ({ ...f, stage: key as any }))}
                         style={{ padding: '8px', borderRadius: '2px', border: `1px solid ${form.stage === key ? s.color : 'var(--border)'}`, background: form.stage === key ? s.color + '20' : 'transparent', cursor: 'pointer', fontSize: '11px', fontWeight: 700, color: form.stage === key ? s.color : 'var(--text-secondary)', letterSpacing: '0.05em' }}>
                         {s.label}
                       </button>
