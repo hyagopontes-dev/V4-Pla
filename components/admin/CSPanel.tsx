@@ -3,17 +3,40 @@ import { useState, useMemo } from 'react'
 import ClientCSEditor from './ClientCSEditor'
 import { createClient } from '@/lib/supabase'
 import { ClientCS, NPSResponse, CSActivity } from '@/types'
-import { AlertTriangle, TrendingUp, TrendingDown, Heart, Users, Plus, X, Save, ChevronRight, Clock, Activity } from 'lucide-react'
+import { AlertTriangle, Activity, Save, X, Edit2 } from 'lucide-react'
 
 interface Client { id: string; name: string; slug: string; active: boolean }
-interface TeamMember { id: string; name: string; avatar_color: string; role?: string }
+interface TeamMember { id: string; name: string; avatar_color: string; role?: string; role_type?: string }
 interface HealthSnap { id: string; client_id: string; score: number; recorded_at: string }
 interface CSHistory { id: string; client_id: string; from_stage: string; to_stage: string; reason: string; changed_by: string; created_at: string }
+interface ClientTeamRow {
+  client_id: string
+  team_member_id: string
+  team_members: TeamMember
+}
+interface AgencyGoal {
+  id?: string
+  month: number
+  year: number
+  goal_revenue: number
+  goal_new_clients: number
+  goal_churn_rate: number
+  goal_nps: number
+  goal_upsell: number
+}
 
 interface Props {
-  clients: Client[]; csData: ClientCS[]; csHistory: CSHistory[]
-  npsResponses: NPSResponse[]; csActivities: CSActivity[]
-  healthHistory: HealthSnap[]; team: TeamMember[]; month: number; year: number
+  clients: Client[]
+  csData: ClientCS[]
+  csHistory: CSHistory[]
+  npsResponses: NPSResponse[]
+  csActivities: CSActivity[]
+  healthHistory: HealthSnap[]
+  team: TeamMember[]
+  clientTeam: ClientTeamRow[]
+  agencyGoals: AgencyGoal | null
+  month: number
+  year: number
 }
 
 const STAGES = {
@@ -23,6 +46,7 @@ const STAGES = {
   alerta:       { label: 'Alerta',       color: '#ef4444', bg: 'rgba(239,68,68,0.12)',  desc: 'Requer atenção imediata' },
 }
 
+const MONTH_NAMES = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez']
 const fBRL = (v: number) => `R$ ${v.toLocaleString('pt-BR', { minimumFractionDigits: 0 })}`
 const fK = (v: number) => v >= 1000 ? `R$ ${(v/1000).toFixed(1)}k` : fBRL(v)
 
@@ -57,12 +81,45 @@ function MiniBar({ pct, color }: { pct: number; color: string }) {
   )
 }
 
-export default function CSPanel({ clients, csData: initial, csHistory: initHistory, npsResponses, csActivities: initActivities, healthHistory, team, month, year }: Props) {
+function TeamAvatars({ members }: { members: TeamMember[] }) {
+  if (members.length === 0) return <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>—</span>
+  return (
+    <div style={{ display: 'flex' }}>
+      {members.slice(0, 4).map((m, i) => (
+        <div key={m.id} title={m.name} style={{
+          width: '22px', height: '22px', borderRadius: '50%',
+          background: m.avatar_color, display: 'flex', alignItems: 'center',
+          justifyContent: 'center', fontSize: '10px', fontWeight: 700,
+          color: '#0A0A0A', flexShrink: 0,
+          marginLeft: i > 0 ? '-6px' : 0,
+          border: '2px solid var(--bg-card)',
+          position: 'relative', zIndex: 4 - i,
+        }}>
+          {m.name.charAt(0).toUpperCase()}
+        </div>
+      ))}
+      {members.length > 4 && (
+        <div style={{
+          width: '22px', height: '22px', borderRadius: '50%',
+          background: 'var(--bg-hover)', display: 'flex', alignItems: 'center',
+          justifyContent: 'center', fontSize: '9px', fontWeight: 700,
+          color: 'var(--text-secondary)', marginLeft: '-6px',
+          border: '2px solid var(--bg-card)',
+        }}>+{members.length - 4}</div>
+      )}
+    </div>
+  )
+}
+
+export default function CSPanel({
+  clients, csData: initial, csHistory: initHistory, npsResponses,
+  csActivities: initActivities, healthHistory, team,
+  clientTeam: initClientTeam, agencyGoals: initGoals, month, year,
+}: Props) {
   const [csData, setCsData] = useState<ClientCS[]>(initial)
   const [editingClient, setEditingClient] = useState<string | null>(null)
   const [csHistory, setCsHistory] = useState<CSHistory[]>(initHistory)
   const [activities, setActivities] = useState<CSActivity[]>(initActivities)
-  const [selectedClient, setSelectedClient] = useState<string | null>(null)
   const [showStageModal, setShowStageModal] = useState<string | null>(null)
   const [showActForm, setShowActForm] = useState(false)
   const [showNPSForm, setShowNPSForm] = useState<string | null>(null)
@@ -71,37 +128,58 @@ export default function CSPanel({ clients, csData: initial, csHistory: initHisto
   const [saving, setSaving] = useState(false)
   const [actForm, setActForm] = useState({ client_id: '', cs_owner: '', type: 'checkin', notes: '', done: true, done_at: new Date().toISOString().slice(0, 16) })
   const [npsForm, setNpsForm] = useState({ score: 8, comment: '' })
+
+  // Agency goals state
+  const [agencyGoals, setAgencyGoals] = useState<AgencyGoal | null>(initGoals)
+  const [editingGoals, setEditingGoals] = useState(false)
+  const [goalForm, setGoalForm] = useState({
+    goal_revenue: String(initGoals?.goal_revenue ?? 0),
+    goal_new_clients: String(initGoals?.goal_new_clients ?? 0),
+    goal_churn_rate: String(initGoals?.goal_churn_rate ?? 5),
+    goal_nps: String(initGoals?.goal_nps ?? 50),
+    goal_upsell: String(initGoals?.goal_upsell ?? 0),
+  })
+
   const supabase = createClient()
   const now = new Date()
 
-  // Build map client_id -> cs
+  // client_id → TeamMember[]
+  const clientTeamMap = useMemo(() => {
+    const map: Record<string, TeamMember[]> = {}
+    initClientTeam.forEach(row => {
+      if (!row.team_members) return
+      if (!map[row.client_id]) map[row.client_id] = []
+      map[row.client_id].push(row.team_members)
+    })
+    return map
+  }, [initClientTeam])
+
+  // team_member_id → client_id[]
+  const teamClientMap = useMemo(() => {
+    const map: Record<string, string[]> = {}
+    initClientTeam.forEach(row => {
+      if (!map[row.team_member_id]) map[row.team_member_id] = []
+      map[row.team_member_id].push(row.client_id)
+    })
+    return map
+  }, [initClientTeam])
+
   const csMap = useMemo(() => Object.fromEntries(csData.map(c => [c.client_id, c])), [csData])
 
-  // Health score calc: engagement(30) + NPS(30) + payment(20) + contact(20)
   function calcHealth(clientId: string): number {
     const cs = csMap[clientId]
     if (!cs) return 50
-
-    // Engagement: based on stage
     const engageMap: Record<string, number> = { escala: 100, estavel: 80, estruturacao: 60, alerta: 20 }
     const engage = engageMap[cs.stage] ?? 50
-
-    // NPS: 0-10 → 0-100
     const npsScore = cs.nps_score != null ? (cs.nps_score / 10) * 100 : 50
-
-    // Payment
     const payment = cs.payment_on_time ? 100 : 0
-
-    // Contact recency: days since last contact
     const daysSinceContact = cs.last_contact_at
       ? (now.getTime() - new Date(cs.last_contact_at).getTime()) / 86400000
       : 60
     const contactScore = daysSinceContact <= 7 ? 100 : daysSinceContact <= 14 ? 75 : daysSinceContact <= 30 ? 50 : daysSinceContact <= 45 ? 25 : 0
-
     return Math.round(engage * 0.3 + npsScore * 0.3 + payment * 0.2 + contactScore * 0.2)
   }
 
-  // NPS calc
   const last6NPS = useMemo(() => {
     const cutoff = new Date(); cutoff.setMonth(cutoff.getMonth() - 6)
     return npsResponses.filter(n => new Date(n.responded_at) >= cutoff)
@@ -110,55 +188,54 @@ export default function CSPanel({ clients, csData: initial, csHistory: initHisto
   const detractors = last6NPS.filter(n => n.score <= 6).length
   const npsScore = last6NPS.length > 0 ? Math.round(((promoters - detractors) / last6NPS.length) * 100) : null
 
-  // MRR
   const totalMRR = csData.reduce((s, c) => s + (c.mrr || 0), 0)
   const alertMRR = csData.filter(c => c.stage === 'alerta').reduce((s, c) => s + (c.mrr || 0), 0)
 
-  // Churn (mock: cancelled this month / base)
-  const baseClients = clients.length
-  const churnRate = baseClients > 0 ? 0 : 0 // Would need cancellation tracking
+  const clientsWithCS = clients.map(c => ({ ...c, cs: csMap[c.id], health: calcHealth(c.id) }))
+  const alertClients = clientsWithCS.filter(c => c.cs?.stage === 'alerta')
 
-  // Alerts
   const alerts = useMemo(() => {
-    const a: { text: string; type: 'warning' | 'danger'; clientId?: string }[] = []
-
+    const a: { text: string; type: 'warning' | 'danger' }[] = []
     clients.forEach(client => {
       const cs = csMap[client.id]
       if (!cs) return
-      const score = calcHealth(client.id)
-
-      // Health drop > 15pts in 30 days
       const recentHistory = healthHistory.filter(h => h.client_id === client.id).slice(0, 2)
       if (recentHistory.length >= 2) {
         const drop = recentHistory[1].score - recentHistory[0].score
-        if (drop > 15) a.push({ text: `${client.name}: health score caiu ${drop} pontos em 30 dias.`, type: 'danger', clientId: client.id })
+        if (drop > 15) a.push({ text: `${client.name}: health score caiu ${drop} pontos em 30 dias.`, type: 'danger' })
       }
-
-      // Alert stage + no contact > 7 days
       if (cs.stage === 'alerta' && cs.last_contact_at) {
         const days = (now.getTime() - new Date(cs.last_contact_at).getTime()) / 86400000
-        if (days > 7) a.push({ text: `${client.name} está em "Alerta" sem contato há ${Math.floor(days)} dias.`, type: 'danger', clientId: client.id })
+        if (days > 7) a.push({ text: `${client.name} está em "Alerta" sem contato há ${Math.floor(days)} dias.`, type: 'danger' })
       }
-
-      // No meeting > 45 days
       if (cs.last_meeting_at) {
         const days = (now.getTime() - new Date(cs.last_meeting_at).getTime()) / 86400000
-        if (days > 45) a.push({ text: `${client.name} sem reunião registrada há ${Math.floor(days)} dias.`, type: 'warning', clientId: client.id })
+        if (days > 45) a.push({ text: `${client.name} sem reunião registrada há ${Math.floor(days)} dias.`, type: 'warning' })
       }
     })
-
-    // Detractors
-    const recentNPS = npsResponses.filter(n => {
+    npsResponses.filter(n => {
       const days = (now.getTime() - new Date(n.responded_at).getTime()) / 86400000
       return days <= 30 && n.score <= 6
-    })
-    recentNPS.forEach(n => {
+    }).forEach(n => {
       const client = clients.find(c => c.id === n.client_id)
-      if (client) a.push({ text: `${client.name} respondeu NPS com nota ${n.score} (detrator).`, type: 'danger', clientId: client.id })
+      if (client) a.push({ text: `${client.name} respondeu NPS com nota ${n.score} (detrator).`, type: 'danger' })
     })
-
     return a
   }, [clients, csMap, healthHistory, npsResponses])
+
+  const stageGroups = Object.keys(STAGES).map(s => ({
+    key: s, ...STAGES[s as keyof typeof STAGES],
+    clients: clientsWithCS.filter(c => (c.cs?.stage ?? 'estruturacao') === s),
+  }))
+
+  const activitiesThisMonth = activities.filter(a => a.done_at && new Date(a.done_at).getMonth() + 1 === month)
+
+  // Team members assigned to selected client (for activity form)
+  const assignedForSelectedClient = useMemo(() => {
+    if (!actForm.client_id) return team
+    const assigned = clientTeamMap[actForm.client_id] ?? []
+    return assigned.length > 0 ? assigned : team
+  }, [actForm.client_id, clientTeamMap, team])
 
   async function changeStage(clientId: string) {
     if (!newStage || !stageReason.trim()) return
@@ -182,7 +259,6 @@ export default function CSPanel({ clients, csData: initial, csHistory: initHisto
     const { data } = await supabase.from('cs_activities').insert(payload).select().single()
     if (data) {
       setActivities(prev => [data, ...prev])
-      // Update last_contact_at
       await supabase.from('client_cs').upsert({ client_id: actForm.client_id, last_contact_at: new Date().toISOString(), updated_at: new Date().toISOString() }, { onConflict: 'client_id' })
       setCsData(prev => prev.map(c => c.client_id === actForm.client_id ? { ...c, last_contact_at: new Date().toISOString() } : c))
     }
@@ -198,20 +274,21 @@ export default function CSPanel({ clients, csData: initial, csHistory: initHisto
     setSaving(false); setShowNPSForm(null)
   }
 
-  // Clients without CS record
-  const clientsWithCS = clients.map(c => ({ ...c, cs: csMap[c.id], health: calcHealth(c.id) }))
-  const alertClients = clientsWithCS.filter(c => c.cs?.stage === 'alerta')
-  const noContactClients = clientsWithCS.filter(c => {
-    const cs = c.cs; if (!cs?.last_contact_at) return true
-    return (now.getTime() - new Date(cs.last_contact_at).getTime()) / 86400000 > 30
-  })
-
-  const stageGroups = Object.keys(STAGES).map(s => ({
-    key: s, ...STAGES[s as keyof typeof STAGES],
-    clients: clientsWithCS.filter(c => (c.cs?.stage ?? 'estruturacao') === s)
-  }))
-
-  const activitiesThisMonth = activities.filter(a => a.done_at && new Date(a.done_at).getMonth() + 1 === month)
+  async function saveGoals() {
+    setSaving(true)
+    const payload = {
+      month, year,
+      goal_revenue: parseFloat(goalForm.goal_revenue) || 0,
+      goal_new_clients: parseInt(goalForm.goal_new_clients) || 0,
+      goal_churn_rate: parseFloat(goalForm.goal_churn_rate) || 5,
+      goal_nps: parseInt(goalForm.goal_nps) || 50,
+      goal_upsell: parseFloat(goalForm.goal_upsell) || 0,
+    }
+    const { data } = await supabase.from('agency_goals').upsert(payload, { onConflict: 'month,year' }).select().single()
+    if (data) setAgencyGoals(data)
+    setSaving(false)
+    setEditingGoals(false)
+  }
 
   return (
     <div>
@@ -219,8 +296,8 @@ export default function CSPanel({ clients, csData: initial, csHistory: initHisto
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '32px', flexWrap: 'wrap', gap: '12px' }}>
         <div>
           <div className="section-label" style={{ marginBottom: '6px' }}>Painel Interno</div>
-          <h1 style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: '34px', letterSpacing: '0.04em', color: 'var(--text)', lineHeight: 1 }}>CUSTOMER SUCCESS</h1>
-          <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '4px', fontWeight: 300 }}>Saúde da carteira, NPS e gestão de ciclo de vida</p>
+          <h1 style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: '34px', letterSpacing: '0.04em', color: 'var(--text)', lineHeight: 1 }}>OPERACIONAL</h1>
+          <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '4px', fontWeight: 300 }}>Metas, equipe e saúde da carteira de clientes</p>
         </div>
         <div style={{ display: 'flex', gap: '8px' }}>
           <button onClick={() => setShowActForm(true)} className="btn-ghost" style={{ padding: '8px 16px' }}><Activity size={13} /> Registrar Atividade</button>
@@ -234,6 +311,85 @@ export default function CSPanel({ clients, csData: initial, csHistory: initHisto
           {alerts.length > 5 && <p style={{ fontSize: '11px', color: 'var(--text-secondary)', textAlign: 'center' }}>+{alerts.length - 5} alertas adicionais</p>}
         </div>
       )}
+
+      {/* ── METAS DA AGÊNCIA ── */}
+      <div className="card" style={{ padding: 0, overflow: 'hidden', marginBottom: '24px' }}>
+        <div style={{ padding: '14px 20px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div className="section-label">Metas da Agência — {MONTH_NAMES[month - 1]}/{year}</div>
+          <button
+            onClick={() => setEditingGoals(v => !v)}
+            style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', color: 'var(--yellow)', background: 'none', border: '1px solid var(--yellow-border)', borderRadius: '2px', padding: '4px 10px', cursor: 'pointer' }}
+          >
+            <Edit2 size={11} /> {editingGoals ? 'Fechar' : 'Editar Metas'}
+          </button>
+        </div>
+
+        {editingGoals ? (
+          <div style={{ padding: '20px', display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '12px' }}>
+            {[
+              { key: 'goal_revenue', label: 'MRR Meta (R$)', placeholder: '50000' },
+              { key: 'goal_new_clients', label: 'Novos Clientes', placeholder: '3' },
+              { key: 'goal_churn_rate', label: 'Churn Máx (%)', placeholder: '5' },
+              { key: 'goal_nps', label: 'NPS Meta', placeholder: '50' },
+              { key: 'goal_upsell', label: 'Upsell Meta (R$)', placeholder: '10000' },
+            ].map(({ key, label, placeholder }) => (
+              <div key={key}>
+                <label className="label">{label}</label>
+                <input
+                  type="number"
+                  className="input"
+                  placeholder={placeholder}
+                  value={(goalForm as any)[key]}
+                  onChange={e => setGoalForm(f => ({ ...f, [key]: e.target.value } as typeof f))}
+                />
+              </div>
+            ))}
+            <div style={{ gridColumn: '1 / -1', display: 'flex', gap: '8px', marginTop: '4px' }}>
+              <button onClick={saveGoals} disabled={saving} className="btn-primary" style={{ padding: '8px 20px' }}>
+                <Save size={13} /> {saving ? 'Salvando...' : 'Salvar Metas'}
+              </button>
+              <button onClick={() => setEditingGoals(false)} className="btn-ghost">Cancelar</button>
+            </div>
+          </div>
+        ) : (
+          <div style={{ padding: '20px', display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '20px' }}>
+            {(() => {
+              const g = agencyGoals
+              const mrrPct = g?.goal_revenue ? Math.round((totalMRR / g.goal_revenue) * 100) : null
+              const clientsPct = g?.goal_new_clients ? Math.round((clients.length / (g.goal_new_clients + clients.length)) * 100) : null
+              const npsPct = g && npsScore !== null && g.goal_nps ? Math.round(((npsScore + 100) / (g.goal_nps + 100)) * 100) : null
+              const upsellTotal = clientsWithCS.filter(c => c.cs?.upsell_opportunity).reduce((s, c) => s + (c.cs?.upsell_value || 0), 0)
+              const upsellPct = g?.goal_upsell ? Math.round((upsellTotal / g.goal_upsell) * 100) : null
+
+              const items = [
+                { label: 'MRR', actual: fK(totalMRR), goal: g ? fK(g.goal_revenue) : '—', pct: mrrPct, color: '#F5C518' },
+                { label: 'Novos Clientes', actual: String(clients.length), goal: g ? `meta +${g.goal_new_clients}` : '—', pct: clientsPct, color: '#22c55e' },
+                { label: 'Churn', actual: '—', goal: g ? `máx ${g.goal_churn_rate}%` : '—', pct: null, color: '#ef4444' },
+                { label: 'NPS', actual: npsScore !== null ? (npsScore >= 0 ? '+' : '') + npsScore : '—', goal: g ? `meta ${g.goal_nps}` : '—', pct: npsPct, color: npsScore !== null && npsScore >= 0 ? '#22c55e' : '#ef4444' },
+                { label: 'Upsell', actual: fK(upsellTotal), goal: g ? fK(g.goal_upsell) : '—', pct: upsellPct, color: '#6366f1' },
+              ]
+
+              return items.map(({ label, actual, goal, pct, color }) => (
+                <div key={label}>
+                  <p style={{ fontSize: '10px', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--text-secondary)', marginBottom: '8px' }}>{label}</p>
+                  <p style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: '26px', color, lineHeight: 1, marginBottom: '4px' }}>{actual}</p>
+                  <p style={{ fontSize: '10px', color: 'var(--text-secondary)', marginBottom: '8px' }}>{goal}</p>
+                  {pct !== null ? (
+                    <>
+                      <MiniBar pct={pct} color={color} />
+                      <p style={{ fontSize: '10px', color: 'var(--text-secondary)', marginTop: '4px' }}>{Math.min(pct, 100)}% da meta</p>
+                    </>
+                  ) : (
+                    <p style={{ fontSize: '10px', color: 'var(--text-muted)' }}>
+                      {agencyGoals ? 'Sem dados' : 'Meta não definida'}
+                    </p>
+                  )}
+                </div>
+              ))
+            })()}
+          </div>
+        )}
+      </div>
 
       {/* KPI Row */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '12px', marginBottom: '24px' }}>
@@ -308,7 +464,7 @@ export default function CSPanel({ clients, csData: initial, csHistory: initHisto
         </div>
       </div>
 
-      {/* Health Score */}
+      {/* ── HEALTH SCORE POR CLIENTE ── */}
       <div className="card" style={{ padding: 0, overflow: 'hidden', marginBottom: '24px' }}>
         <div style={{ padding: '14px 20px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div className="section-label">Health Score por Cliente</div>
@@ -322,7 +478,7 @@ export default function CSPanel({ clients, csData: initial, csHistory: initHisto
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px' }}>
             <thead>
               <tr style={{ borderBottom: '1px solid var(--border)' }}>
-                {['Cliente', 'CS Owner', 'Estágio', 'Health Score', 'NPS', 'Último Contato', 'MRR', 'Ações'].map(h => (
+                {['Cliente', 'Equipe', 'Estágio', 'Health Score', 'NPS', 'Último Contato', 'MRR', 'Ações'].map(h => (
                   <th key={h} style={{ padding: '9px 14px', textAlign: 'left', fontSize: '10px', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--text-secondary)', fontWeight: 500, whiteSpace: 'nowrap' }}>{h}</th>
                 ))}
               </tr>
@@ -332,12 +488,15 @@ export default function CSPanel({ clients, csData: initial, csHistory: initHisto
                 const cs = client.cs
                 const stage = STAGES[(cs?.stage ?? 'estruturacao') as keyof typeof STAGES]
                 const daysSince = cs?.last_contact_at ? Math.floor((now.getTime() - new Date(cs.last_contact_at).getTime()) / 86400000) : null
+                const assignedTeam = clientTeamMap[client.id] ?? []
                 return (
                   <tr key={client.id} style={{ borderBottom: '1px solid var(--border)', transition: 'background 0.1s' }}
                     onMouseEnter={e => (e.currentTarget.style.background = 'var(--bg-hover)')}
                     onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
                     <td style={{ padding: '10px 14px', fontWeight: 500, color: 'var(--text)' }}>{client.name}</td>
-                    <td style={{ padding: '10px 14px', color: 'var(--text-secondary)' }}>{cs?.cs_owner ?? '—'}</td>
+                    <td style={{ padding: '10px 14px' }}>
+                      <TeamAvatars members={assignedTeam} />
+                    </td>
                     <td style={{ padding: '10px 14px' }}>
                       <span style={{ fontSize: '10px', padding: '3px 8px', borderRadius: '2px', background: stage.bg, color: stage.color, fontWeight: 600, letterSpacing: '0.08em', cursor: 'pointer' }}
                         onClick={() => { setShowStageModal(client.id); setNewStage(cs?.stage ?? 'estruturacao') }}>
@@ -371,12 +530,9 @@ export default function CSPanel({ clients, csData: initial, csHistory: initHisto
                       {cs?.mrr ? fK(cs.mrr) : '—'}
                     </td>
                     <td style={{ padding: '10px 14px' }}>
-                      <div style={{ display: 'flex', gap: '6px' }}>
-                        <button onClick={() => setEditingClient(client.id)}
-                          className="btn-primary" style={{ padding: '4px 12px', fontSize: '10px' }}>
-                          Editar
-                        </button>
-                      </div>
+                      <button onClick={() => setEditingClient(client.id)} className="btn-primary" style={{ padding: '4px 12px', fontSize: '10px' }}>
+                        Editar
+                      </button>
                     </td>
                   </tr>
                 )
@@ -387,31 +543,47 @@ export default function CSPanel({ clients, csData: initial, csHistory: initHisto
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '24px' }}>
-        {/* CS Team */}
+        {/* ── CARTEIRA POR MEMBRO DA EQUIPE ── */}
         <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
           <div style={{ padding: '14px 20px', borderBottom: '1px solid var(--border)' }}>
-            <div className="section-label">Carteira por CS</div>
+            <div className="section-label">Carteira por Equipe</div>
           </div>
           <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
             {team.map(m => {
-              const clientsOwned = clientsWithCS.filter(c => c.cs?.cs_owner === m.name)
+              const assignedClientIds = teamClientMap[m.id] ?? []
+              const clientsOwned = clientsWithCS.filter(c => assignedClientIds.includes(c.id))
               const avgHealth = clientsOwned.length ? Math.round(clientsOwned.reduce((s, c) => s + c.health, 0) / clientsOwned.length) : 0
               const alertCount = clientsOwned.filter(c => c.cs?.stage === 'alerta').length
               return (
                 <div key={m.id} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: m.avatar_color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px', fontWeight: 700, color: '#0A0A0A', flexShrink: 0 }}>{m.name.charAt(0)}</div>
+                  <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: m.avatar_color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px', fontWeight: 700, color: '#0A0A0A', flexShrink: 0 }}>
+                    {m.name.charAt(0)}
+                  </div>
                   <div style={{ flex: 1 }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <span style={{ fontSize: '12px', color: 'var(--text)', fontWeight: 500 }}>{m.name}</span>
-                      <div style={{ display: 'flex', gap: '6px' }}>
-                        <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>{clientsOwned.length} clientes</span>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div>
+                        <span style={{ fontSize: '12px', color: 'var(--text)', fontWeight: 500 }}>{m.name}</span>
+                        {m.role && <span style={{ fontSize: '10px', color: 'var(--text-secondary)', marginLeft: '6px' }}>{m.role}</span>}
+                      </div>
+                      <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                        <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>{clientsOwned.length} cliente{clientsOwned.length !== 1 ? 's' : ''}</span>
                         {alertCount > 0 && <span style={{ fontSize: '10px', color: '#ef4444', fontWeight: 700 }}>⚠️ {alertCount}</span>}
                       </div>
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '3px' }}>
-                      <MiniBar pct={avgHealth} color={avgHealth >= 70 ? '#22c55e' : avgHealth >= 40 ? '#eab308' : '#ef4444'} />
-                      <span style={{ fontSize: '10px', color: 'var(--text-secondary)', flexShrink: 0 }}>{avgHealth} avg</span>
-                    </div>
+                    {clientsOwned.length > 0 && (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '4px' }}>
+                        <MiniBar pct={avgHealth} color={avgHealth >= 70 ? '#22c55e' : avgHealth >= 40 ? '#eab308' : '#ef4444'} />
+                        <span style={{ fontSize: '10px', color: 'var(--text-secondary)', flexShrink: 0 }}>{avgHealth} avg</span>
+                      </div>
+                    )}
+                    {clientsOwned.length > 0 && (
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginTop: '4px' }}>
+                        {clientsOwned.slice(0, 3).map(c => (
+                          <span key={c.id} style={{ fontSize: '9px', padding: '1px 6px', borderRadius: '2px', background: 'var(--bg-hover)', color: 'var(--text-secondary)', border: '1px solid var(--border)' }}>{c.name}</span>
+                        ))}
+                        {clientsOwned.length > 3 && <span style={{ fontSize: '9px', color: 'var(--text-muted)' }}>+{clientsOwned.length - 3}</span>}
+                      </div>
+                    )}
                   </div>
                 </div>
               )
@@ -445,16 +617,16 @@ export default function CSPanel({ clients, csData: initial, csHistory: initHisto
         </div>
       </div>
 
-      {/* Recent CS Activities */}
+      {/* Atividades do mês */}
       <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
         <div style={{ padding: '14px 20px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div className="section-label">Atividades de CS — {new Date(year, month - 1).toLocaleString('pt-BR', { month: 'long' })}</div>
           <button onClick={() => setShowActForm(true)} style={{ fontSize: '10px', color: 'var(--yellow)', background: 'none', border: 'none', cursor: 'pointer' }}>+ Registrar</button>
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '1px', background: 'var(--border)', padding: '0' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '1px', background: 'var(--border)' }}>
           {['meeting', 'call', 'email', 'checkin', 'ticket'].map(type => {
             const count = activitiesThisMonth.filter(a => a.type === type).length
-            const labels: Record<string,string> = { meeting: '🤝 Reuniões', call: '📞 Ligações', email: '✉️ E-mails', checkin: '✅ Check-ins', ticket: '🎫 Tickets' }
+            const labels: Record<string, string> = { meeting: '🤝 Reuniões', call: '📞 Ligações', email: '✉️ E-mails', checkin: '✅ Check-ins', ticket: '🎫 Tickets' }
             return (
               <div key={type} style={{ background: 'var(--bg-card)', padding: '16px', textAlign: 'center' }}>
                 <div style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: '32px', color: 'var(--yellow)', lineHeight: 1 }}>{count}</div>
@@ -465,7 +637,9 @@ export default function CSPanel({ clients, csData: initial, csHistory: initHisto
         </div>
       </div>
 
-      {/* ClientCS Editor Modal */}
+      {/* ── MODAIS ── */}
+
+      {/* ClientCS Editor */}
       {editingClient && (() => {
         const client = clients.find(c => c.id === editingClient)!
         const cs = csMap[editingClient] ?? null
@@ -487,12 +661,12 @@ export default function CSPanel({ clients, csData: initial, csHistory: initHisto
               setEditingClient(null)
             }}
             onAddActivity={(a) => setActivities(prev => [a, ...prev])}
-            onAddNPS={(n) => {}}
+            onAddNPS={() => {}}
           />
         )
       })()}
 
-      {/* Stage Change Modal */}
+      {/* Stage Change */}
       {showStageModal && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
           <div className="card" style={{ width: '100%', maxWidth: '420px' }}>
@@ -540,16 +714,22 @@ export default function CSPanel({ clients, csData: initial, csHistory: initHisto
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               <div>
                 <label className="label">Cliente *</label>
-                <select className="input" value={actForm.client_id} onChange={e => setActForm(f => ({ ...f, client_id: e.target.value }))}>
+                <select className="input" value={actForm.client_id}
+                  onChange={e => setActForm(f => ({ ...f, client_id: e.target.value, cs_owner: '' }))}>
                   <option value="">Selecionar...</option>
                   {clients.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                 </select>
               </div>
               <div>
-                <label className="label">CS Responsável</label>
+                <label className="label">
+                  Responsável
+                  {actForm.client_id && (clientTeamMap[actForm.client_id] ?? []).length > 0 && (
+                    <span style={{ marginLeft: '6px', fontSize: '10px', color: 'var(--text-muted)', fontWeight: 400 }}>— equipe do cliente</span>
+                  )}
+                </label>
                 <select className="input" value={actForm.cs_owner} onChange={e => setActForm(f => ({ ...f, cs_owner: e.target.value }))}>
                   <option value="">Selecionar...</option>
-                  {team.map(m => <option key={m.id} value={m.name}>{m.name}</option>)}
+                  {assignedForSelectedClient.map(m => <option key={m.id} value={m.name}>{m.name}{m.role ? ` · ${m.role}` : ''}</option>)}
                 </select>
               </div>
               <div>
