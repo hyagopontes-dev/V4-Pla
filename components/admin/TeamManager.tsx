@@ -28,7 +28,7 @@ export default function TeamManager({ initialMembers }: Props) {
 
   function openNew() {
     setEditing(null)
-    setForm({ name: '', email: '', role: '', avatar_color: '#F5C518' })
+    setForm({ name: '', email: '', role: '', role_type: 'operational', avatar_color: '#F5C518' })
     setShowForm(true)
   }
 
