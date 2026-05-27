@@ -93,7 +93,15 @@ export default function TeamManager({ initialMembers }: Props) {
               <label className="label">Cargo / Função</label>
               <select className="input" value={form.role} onChange={e => setForm(f => ({ ...f, role: e.target.value }))}>
                 <option value="">Selecionar...</option>
-                {ROLES.map(r => <option key={r} value={r}>{r}</option>)}
+                <optgroup label="Comercial (Vendas)">
+                  {SALES_ROLES.map(r => <option key={r} value={r}>{r}</option>)}
+                </optgroup>
+                <optgroup label="Operacional">
+                  {OPS_ROLES.map(r => <option key={r} value={r}>{r}</option>)}
+                </optgroup>
+                <optgroup label="Gestão">
+                  {MGMT_ROLES.map(r => <option key={r} value={r}>{r}</option>)}
+                </optgroup>
               </select>
             </div>
             <div>
