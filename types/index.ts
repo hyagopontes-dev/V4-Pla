@@ -215,6 +215,7 @@ export interface TeamMember {
   name: string
   email?: string
   role?: string
+  role_type?: 'sales' | 'operational' | 'management'
   avatar_color: string
   active: boolean
   created_at: string

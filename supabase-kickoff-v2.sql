@@ -343,3 +343,26 @@ create table if not exists public.health_score_history (
   recorded_at timestamptz default now()
 );
 alter table public.health_score_history disable row level security;
+
+-- Add role_type to team_members
+alter table public.team_members
+  add column if not exists role_type text default 'operational' check (role_type in ('sales','operational','management'));
+
+-- Add unique constraint for NPS per client per month
+alter table public.nps_responses
+  add column if not exists month int,
+  add column if not exists year int;
+
+-- Overall sales goal
+create table if not exists public.agency_goals (
+  id uuid default gen_random_uuid() primary key,
+  month int not null,
+  year int not null,
+  goal_revenue numeric(12,2) default 0,
+  goal_new_clients int default 0,
+  goal_churn_rate numeric(5,2) default 5.0,
+  goal_nps int default 50,
+  goal_upsell numeric(12,2) default 0,
+  unique(month, year)
+);
+alter table public.agency_goals disable row level security;

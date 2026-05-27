@@ -61,6 +61,7 @@ export default function CommercialPanel({ deals, activities: initialActivities, 
   const [showActForm, setShowActForm] = useState(false)
   const [editDeal, setEditDeal] = useState<Deal | null>(null)
   const [filterResponsible, setFilterResponsible] = useState('')
+  const salesTeam = team.filter(m => (m as any).role_type === 'sales' || (m as any).role_type === 'management')
   const [filterStage, setFilterStage] = useState('')
   const [saving, setSaving] = useState(false)
   const supabase = createClient()
@@ -239,9 +240,9 @@ export default function CommercialPanel({ deals, activities: initialActivities, 
             <div className="section-label">Performance por Vendedor</div>
           </div>
           <div style={{ padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-            {team.length === 0 ? (
-              <p style={{ fontSize: '12px', color: 'var(--text-secondary)', textAlign: 'center', padding: '16px 0' }}>Cadastre membros em Equipe</p>
-            ) : team.map(m => {
+            {salesTeam.length === 0 ? (
+              <p style={{ fontSize: '12px', color: 'var(--text-secondary)', textAlign: 'center', padding: '16px 0' }}>Cadastre SDRs, BDRs e Closers em Equipe</p>
+            ) : salesTeam.map(m => {
               const goal = goals.find(g => g.team_member_id === m.id)
               const won = wonThisMonth.filter(d => d.responsible === m.name)
               const rev = won.reduce((s, d) => s + d.value, 0)
@@ -311,6 +312,9 @@ export default function CommercialPanel({ deals, activities: initialActivities, 
           </div>
         </div>
       </div>
+
+      {/* Agency Goal */}
+      {/* TODO: agency_goals table */}
 
       {/* Pipeline Table */}
       <div className="card" style={{ padding: 0, overflow: 'hidden', marginBottom: '24px' }}>

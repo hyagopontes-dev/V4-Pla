@@ -7,13 +7,22 @@ import { Plus, Trash2, Save, Users, Edit2 } from 'lucide-react'
 interface Props { initialMembers: TeamMember[] }
 
 const COLORS = ['#F5C518','#22c55e','#3b82f6','#f97316','#a855f7','#ec4899','#14b8a6','#ef4444']
-const ROLES = ['Gestor','Estrategista','Tráfego','Comercial','Designer','Copywriter','Social Media','Analista']
+const SALES_ROLES = ['SDR', 'BDR', 'Closer', 'Gerente Comercial']
+const OPS_ROLES = ['Gestor de Tráfego', 'Social Media', 'Designer', 'Copywriter', 'Estrategista', 'Analista', 'SEO']
+const MGMT_ROLES = ['Diretor', 'CEO', 'COO', 'Gerente']
+const ALL_ROLES = [...SALES_ROLES, ...OPS_ROLES, ...MGMT_ROLES]
+const ROLE_TYPE_MAP: Record<string, string> = {
+  'SDR': 'sales', 'BDR': 'sales', 'Closer': 'sales', 'Gerente Comercial': 'sales',
+  'Gestor de Tráfego': 'operational', 'Social Media': 'operational', 'Designer': 'operational',
+  'Copywriter': 'operational', 'Estrategista': 'operational', 'Analista': 'operational', 'SEO': 'operational',
+  'Diretor': 'management', 'CEO': 'management', 'COO': 'management', 'Gerente': 'management',
+}
 
 export default function TeamManager({ initialMembers }: Props) {
   const [members, setMembers] = useState<TeamMember[]>(initialMembers)
   const [showForm, setShowForm] = useState(false)
   const [editing, setEditing] = useState<TeamMember | null>(null)
-  const [form, setForm] = useState({ name: '', email: '', role: '', avatar_color: '#F5C518' })
+  const [form, setForm] = useState({ name: '', email: '', role: '', role_type: 'operational', avatar_color: '#F5C518' })
   const [saving, setSaving] = useState(false)
   const supabase = createClient()
 
@@ -25,7 +34,7 @@ export default function TeamManager({ initialMembers }: Props) {
 
   function openEdit(m: TeamMember) {
     setEditing(m)
-    setForm({ name: m.name, email: m.email ?? '', role: m.role ?? '', avatar_color: m.avatar_color })
+    setForm({ name: m.name, email: m.email ?? '', role: m.role ?? '', role_type: m.role_type ?? 'operational', avatar_color: m.avatar_color })
     setShowForm(true)
   }
 
@@ -133,7 +142,17 @@ export default function TeamManager({ initialMembers }: Props) {
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <p style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text)', marginBottom: '2px' }}>{m.name}</p>
-                  {m.role && <p style={{ fontSize: '11px', color: 'var(--yellow)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>{m.role}</p>}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    {m.role && <p style={{ fontSize: '11px', color: 'var(--yellow)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>{m.role}</p>}
+                    {m.role_type && (
+                      <span style={{ fontSize: '9px', padding: '1px 6px', borderRadius: '2px',
+                        background: m.role_type === 'sales' ? 'rgba(34,197,94,0.1)' : m.role_type === 'management' ? 'rgba(99,102,241,0.1)' : 'rgba(245,197,24,0.08)',
+                        color: m.role_type === 'sales' ? '#22c55e' : m.role_type === 'management' ? '#818cf8' : 'var(--yellow)',
+                        fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase' }}>
+                        {m.role_type === 'sales' ? 'Vendas' : m.role_type === 'management' ? 'Gestão' : 'Ops'}
+                      </span>
+                    )}
+                  </div>
                   {m.email && <p style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '1px' }}>{m.email}</p>}
                 </div>
                 <div style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>

@@ -1,5 +1,6 @@
 'use client'
 import { useState, useMemo } from 'react'
+import ClientCSEditor from './ClientCSEditor'
 import { createClient } from '@/lib/supabase'
 import { ClientCS, NPSResponse, CSActivity } from '@/types'
 import { AlertTriangle, TrendingUp, TrendingDown, Heart, Users, Plus, X, Save, ChevronRight, Clock, Activity } from 'lucide-react'
@@ -58,6 +59,7 @@ function MiniBar({ pct, color }: { pct: number; color: string }) {
 
 export default function CSPanel({ clients, csData: initial, csHistory: initHistory, npsResponses, csActivities: initActivities, healthHistory, team, month, year }: Props) {
   const [csData, setCsData] = useState<ClientCS[]>(initial)
+  const [editingClient, setEditingClient] = useState<string | null>(null)
   const [csHistory, setCsHistory] = useState<CSHistory[]>(initHistory)
   const [activities, setActivities] = useState<CSActivity[]>(initActivities)
   const [selectedClient, setSelectedClient] = useState<string | null>(null)
@@ -370,13 +372,9 @@ export default function CSPanel({ clients, csData: initial, csHistory: initHisto
                     </td>
                     <td style={{ padding: '10px 14px' }}>
                       <div style={{ display: 'flex', gap: '6px' }}>
-                        <button onClick={() => { setActForm(f => ({ ...f, client_id: client.id })); setShowActForm(true) }}
-                          style={{ fontSize: '10px', color: 'var(--yellow)', background: 'none', border: '1px solid var(--yellow-border)', borderRadius: '2px', padding: '3px 8px', cursor: 'pointer' }}>
-                          + Contato
-                        </button>
-                        <button onClick={() => { setShowStageModal(client.id); setNewStage(cs?.stage ?? 'estruturacao') }}
-                          style={{ fontSize: '10px', color: 'var(--text-secondary)', background: 'none', border: '1px solid var(--border)', borderRadius: '2px', padding: '3px 8px', cursor: 'pointer' }}>
-                          Estágio
+                        <button onClick={() => setEditingClient(client.id)}
+                          className="btn-primary" style={{ padding: '4px 12px', fontSize: '10px' }}>
+                          Editar
                         </button>
                       </div>
                     </td>
@@ -466,6 +464,33 @@ export default function CSPanel({ clients, csData: initial, csHistory: initHisto
           })}
         </div>
       </div>
+
+      {/* ClientCS Editor Modal */}
+      {editingClient && (() => {
+        const client = clients.find(c => c.id === editingClient)!
+        const cs = csMap[editingClient] ?? null
+        const clientNPS = npsResponses.filter(n => n.client_id === editingClient)
+        const clientActivities = activities.filter(a => a.client_id === editingClient)
+        return (
+          <ClientCSEditor
+            client={client}
+            cs={cs}
+            npsResponses={clientNPS}
+            activities={clientActivities}
+            team={team}
+            onClose={() => setEditingClient(null)}
+            onSave={(updated) => {
+              setCsData(prev => prev.find(c => c.client_id === editingClient)
+                ? prev.map(c => c.client_id === editingClient ? updated : c)
+                : [...prev, updated]
+              )
+              setEditingClient(null)
+            }}
+            onAddActivity={(a) => setActivities(prev => [a, ...prev])}
+            onAddNPS={(n) => {}}
+          />
+        )
+      })()}
 
       {/* Stage Change Modal */}
       {showStageModal && (

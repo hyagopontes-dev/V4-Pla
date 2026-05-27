@@ -17,6 +17,7 @@ export default async function CSPage() {
     { data: team },
   ] = await Promise.all([
     supabase.from('clients').select('id, name, slug, active').eq('active', true).order('name'),
+
     supabase.from('client_cs').select('*'),
     supabase.from('client_cs_history').select('*').order('created_at', { ascending: false }),
     supabase.from('nps_responses').select('*').order('responded_at', { ascending: false }),
@@ -25,5 +26,17 @@ export default async function CSPage() {
     supabase.from('team_members').select('*').eq('active', true).order('name'),
   ])
 
-  return <CSPanel clients={clients ?? []} csData={csData ?? []} csHistory={csHistory ?? []} npsResponses={npsResponses ?? []} csActivities={csActivities ?? []} healthHistory={healthHistory ?? []} team={team ?? []} month={month} year={year} />
+  return (
+    <CSPanel
+      clients={clients ?? []}
+      csData={csData ?? []}
+      csHistory={csHistory ?? []}
+      npsResponses={npsResponses ?? []}
+      csActivities={csActivities ?? []}
+      healthHistory={healthHistory ?? []}
+      team={team ?? []}
+      month={month}
+      year={year}
+    />
+  )
 }
