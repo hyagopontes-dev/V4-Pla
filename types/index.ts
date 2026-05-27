@@ -294,6 +294,8 @@ export interface NPSResponse {
   client_id: string
   score: number
   comment?: string
+  month?: number
+  year?: number
   responded_at: string
 }
 
